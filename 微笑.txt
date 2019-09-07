@@ -1,0 +1,3575 @@
+1.预备知识：
+（1）TCP通信
+                      https://baike.baidu.com/item/TCP/33012?fr=aladdin
+（2）socket编程
+                    https://baike.baidu.com/item/%E5%A5%97%E6%8E%A5%E5%AD%97/9637606?fr=aladdin
+（3）网络通信编程
+（4）可视化编程
+（5）多线程编程
+
+ 2.思路整理：
+                                (1) 建三个模块      QQ，微信，微博（三者相似，写出一个，其二类推，通过电话号码关联,或QQ号码关联）
+                                (2)三个模块分别先存入几个用户，用于加好友，建几个群表
+                                (3)三个模块其实并不能实现具体有用功能，主要还是建立关联，对好友列表和群的一些操作
+3.QQ
+       (1)基本信息
+                       号码ID，昵称，出生时间，T龄（号码申请时间）、所在地、好友列表、群列表
+       (2)好友管理
+                       （1）实现各功能好友信息的添加、修改、删除、查询的功能。
+                       （2）可以查询微X之间各自共同好友。如微信可以添加QQ推荐好友。
+     （3）群管理
+                        （1）设定QQ已有1001、1002、1003、1004、1005、1006等群号。
+                        （2）加入群、退出群、挨T、查询群成员等。
+                          (3)QQ群可以申请加入,QQ群允许设置临时讨论组（子群）
+                          (4)QQ群有以群主为核心的管理员制度
+package com.hzyc.hzyc03.text;
+
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Map;
+import java.util.Random;
+import java.util.Scanner;
+
+import com.mysql.jdbc.ResultSetMetaData;
+
+public class WandQ {
+
+	/**
+	 * @param args
+	 * @throws SQLException 
+	 */
+	public static void main(String[] args) throws SQLException {
+		// TODO Auto-generated method stub
+
+		System.out.println("*******************************************");
+		System.out.println("*           QQ and WeChat                 *");
+		System.out.println("*                               制作:zsh  *");
+		System.out.println("*******************************************");
+	Sum.mainsurface();
+	}
+}
+class Sum
+{
+	
+	public static  ArrayList<Map<String,String>> listperson;
+	public static  ArrayList<Map<String,String>>  listzs=null;
+    public static void  mainsurface() throws SQLException
+    {
+         System.out.println("【1】应用登录\t\t【2】新用户注册");
+         System.out.println("-请选择-");
+         int choose=strongall(2);
+         switch(choose)
+         {
+         case 1:logon();break;
+         case 2:register();break;
+         }
+    }
+    public static boolean number(String ss)
+	{
+		try
+		{
+			String str=ss;
+			long num=Long.valueOf(ss);
+			return true;
+		}
+		catch(Exception e)
+		{
+			return false;
+		}
+	}
+	public static void register() throws SQLException {
+		System.out.println("【1】QQ注册\t\t【2】微信注册");
+		System.out.println("【3】微博注册\t\t【4】返回主界面");
+        System.out.println("-请选择-");
+        int choose=strongall(4);
+        switch(choose)
+        {
+        case 1:qqregister();break;
+        case 2:wechatregister();break;
+        case 3:blogregister();break;
+        case 4:mainsurface();break;
+        }
+	}
+	public static void logon() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("-----------------登录----------------");
+		System.out.println("【1】进入QQ\t\t【2】进入微信 ");
+		System.out.println("【3】进入微博\t\t【4】退出应用 ");
+        System.out.println("-请选择-");
+        int choose=strongall(4);
+        switch(choose)
+        {
+        case 1:qqlogon();break;
+        case 2:wechatlogon();break;
+        case 3:bloglogon();break;
+        case 4:exit();break;
+        }
+		
+	}
+	public static void exit() {
+		// TODO Auto-generated method stub
+		System.out.println("------------感谢您的使用！-----------");
+	}	
+	public static int strongall(int n) throws SQLException////控制用户选择功能的输入格式
+	{
+		boolean go=false;
+		int num=0;
+		Scanner scan=new Scanner(System.in);
+		String ss=scan.next();
+		while(!go)
+		{
+			while(!number(ss))//使在用户输入错误之后给用户提示信息
+			{
+				System.out.println("输入有误，请重新输入");
+				ss=scan.next();
+			}	
+			 num=Integer.valueOf(ss);
+			 for(int i=1;i<=n;i++)
+			{
+				if(num==i)
+				{
+					go=true;break;
+				}
+			}
+			 if(go==false)
+			 {
+					System.out.println("输入有误，请重新输入");
+					ss=scan.next();
+			 }
+		}
+		return num;
+		
+	}   
+
+	//-----------------qq类开始------------------
+	public static void qqregister() throws SQLException//新用户注册 
+	{
+		// TODO Auto-generated method stub
+		System.out.println("----------------QQ注册---------------");
+		System.out.print("请输入密码：");
+		Scanner scan=new Scanner(System.in);
+		String password=scan.next();
+		while(password.length()<6)
+		{
+			System.out.println("密码长度太短，请重新输入密码");
+			password=scan.next();
+		}
+		System.out.print("请确认密码：");
+		String passwordtwo=scan.next();
+		while(!passwordtwo.equals(password))
+		{
+			System.out.println("密码输入不一致，请重新输入");
+			passwordtwo=scan.next();
+		}
+		System.out.print("请输入昵称：");
+		String name=scan.next();
+		System.out.print("请输入出生时间：");
+		String birthdata=scan.next();
+		Date d=new Date();
+		SimpleDateFormat sdf=new SimpleDateFormat("y年M月d日h时：m分：s秒");
+		String data=sdf.format(d);
+		System.out.print("请输入所在地：");
+		String position=scan.next();
+		Random random=new Random();
+		String accountnumber="130053"+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10));
+		while(!qqonly(accountnumber))
+		{
+			accountnumber="130053"+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10));
+
+		}
+		jdbc.Update("wechatandqq", "qqid", "insert into qqid(idnumber,password) values('"+accountnumber+"',"+"'"+password+"')");
+	    jdbc.Update("wechatandqq", "qqinformation", "insert into qqinformation(idnumber,name,birthdata,tage,position) values('"+accountnumber+"','"+name+"','"+birthdata+"','"+data+"','"+position+"')");
+		listperson=jdbc.List("wechatandqq", "qqid", "where idnumber='"+accountnumber+"'" );
+		System.out.println("注册成功，账号为"+accountnumber);
+        qqsurface();
+	}
+	public static void qqlogon() throws SQLException//QQ登录
+	{
+	
+		System.out.println("----------------QQ登录---------------");
+		Scanner scan=new Scanner(System.in);
+		  String accountnumber,password;
+		  System.out.print("QQ账号:");
+		  accountnumber=scan.next();
+		  while((accountnumber.length()!=10)||!number(accountnumber))
+			 {
+				System.out.println("输入有误，请重新输入");
+				accountnumber=scan.next();
+			 }
+		  listzs=jdbc.List("wechatandqq", "qqid","where idnumber='"+accountnumber+"'");
+		  if(listzs.size()==0)
+		  {
+   		      System.out.println("没有该用户数据,返回主界面");
+			  mainsurface();
+		  }
+		  else
+		  {
+				System.out.print("密码:");
+				password=scan.next();
+		    	   while(!password.equals(listzs.get(0).get("password")))
+		    	   {
+		    		   System.out.println("密码输入错误!");
+		    		   System.out.print("密码:");
+		    		   password=scan.next();
+		    	   }		  
+		    		 System.out.println("登录成功！");
+		    		 listperson=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+accountnumber+"'");
+		    		 qqsurface();
+		  }		
+	}
+	public static void qqsurface() throws SQLException
+	{                      
+		System.out.println("【1】QQ群管理\t\t【2】好友管理");
+		System.out.println("【3】返回主界面");
+		System.out.println("-请选择-");
+		int choose=strong(3);
+		switch(choose)
+		{
+		case 1:qqgroupmanage();break;
+		case 2:qqmembermanage();break;
+		case 3:mainsurface();break;
+		}
+	}
+	public static void qqmembermanage() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("---------------QQ好友管理--------------");
+		System.out.println("【1】好友列表\t\t【2】添加好友");
+		System.out.println("【3】删除好友\t\t【4】查看验证消息  ");
+		System.out.println("【5】查看和微信的共同好友");
+		System.out.println("-请选择-"); 
+		int choose=strong(5);
+		switch(choose)
+		{
+		case 1:qqopenmemberlist();break;
+		case 2:qqaddmember();break;
+		case 3:qqdeletemember();break;
+		case 4:qqcheckmemberinformation();break;
+		case 5:qqinquiremember();break;
+		}
+	}
+	public static void qqcheckmemberinformation() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("--------------QQ查看验证消息-------------");
+		 listperson=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		if(listperson.get(0).get("application")==null||listperson.get(0).get("application").equals("null"))
+		{
+			System.out.println("暂无消息");
+		}
+		else
+		{
+        System.out.println("-好友申请信息-");
+     	ArrayList<Map<String,String>> listmember=null;
+		String[] sss=qqgetmember(listperson.get(0).get("application"));
+			for(int i=0;i<sss.length;i++)
+			{		
+				listmember=jdbc.List("wechatandqq", "qqinformation","where num='"+sss[i]+"'");
+                System.out.println("编号："+listmember.get(0).get("num"));
+                System.out.println("账号："+listmember.get(0).get("idnumber"));
+                System.out.println("昵称："+listmember.get(0).get("name"));
+				System.out.println("是否同意该好友申请【1】同意，【2】拒绝");
+				int choose=strong(2);
+				if(choose==1)
+				{
+					//处理自己这边的数据库
+					String newfriendlist;
+			    	if(listperson.get(0).get("friendlist").equals("null")||listperson.get(0).get("friendlist")==null)
+			    	{
+			    		newfriendlist=listmember.get(0).get("num");
+			    	}
+			    	else			 		    		
+					newfriendlist=listperson.get(0).get("friendlist")+"-"+listmember.get(0).get("num");			    
+			    	jdbc.Update("wechatandqq", "qqinformation", "update qqinformation set friendlist='"+(newfriendlist)+"' where idnumber='"+listperson.get(0).get("idnumber")+"'");
+					
+			    	String newfriendlist2=listmember.get(0).get("friendlist");
+			    	if(listmember.get(0).get("friendlist")==null||listmember.get(0).get("friendlist").equals("null"))
+			    	{
+			    		newfriendlist2=sss[i];
+			    	}
+			    	else
+					newfriendlist2=listmember.get(0).get("friendlist")+"-"+listperson.get(0).get("num");
+			    	jdbc.Update("wechatandqq", "qqinformation", "update qqinformation set friendlist='"+(newfriendlist2)+"' where idnumber='"+listmember.get(0).get("idnumber")+"'");                      
+					for(int j=0;j<sss.length;j++)
+					{
+						if(sss[j].equals(sss[i]))
+						{
+							sss[i]="0";break;
+						}
+					}
+					qqrefreshmemberapplication(sss);
+				}
+				else if(choose==2)
+				{
+					for(int j=0;j<sss.length;j++)
+					{
+						if(sss[j].equals(sss[i]))
+						{
+							sss[i]="0";break;
+						}
+					}
+					qqrefreshmemberapplication(sss);
+				}
+			}
+		}
+
+		qqsurface();
+	}
+	public static void qqinquiremember() throws SQLException {
+		// TODO Auto-generated method stub
+
+		System.out.println("---------查询和微信的共同好友---------");
+		 listperson=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+	   //微信的好友
+		listzs=jdbc.List("wechatandqq", "wechatid","where qq='"+listperson.get(0).get("idnumber")+"'");
+		int get=0;
+		if(listzs==null||listzs.equals("null"))
+		{
+			System.out.println("该账号未绑定微信，无法查询");
+		}
+		else
+		{
+			 ArrayList<Map<String,String>> listw;
+			 String[] ss;
+			if(listzs.get(0).get("friendlist")==null||listperson.get(0).get("friendlist")==null||listperson.get(0).get("friendlist").equals("null")||listzs.get(0).get("friendlist").equals("null"))
+			{
+				System.out.println("无共同好友");
+			}
+			else
+			{
+				ss=wechatgetmember(listzs.get(0).get("friendlist"));
+				for(int i=0;i<ss.length;i++)				
+				{
+					listw=jdbc.List("wechatandqq", "wechatid","where num='"+ss[i]+"'");
+					String id;
+				    if(listw.get(0).get("qq")==null||listw.get(0).get("qq").equals("null"))
+				    {
+				    	id="00";
+				    }
+				    else
+				    {
+				    	id=listw.get(0).get("qq");
+				    }
+				     String[] ssq=qqgetmember(listperson.get(0).get("friendlist"));
+				     for(int j=0;j<ssq.length;j++)
+				     {
+				    	 String qq=jdbc.List("wechatandqq", "qqinformation","where num='"+ssq[j]+"'").get(0).get("idnumber");
+				    	 if(qq.equals(id))
+				    	 {
+				    		 System.out.print("QQ:"+jdbc.List("wechatandqq", "qqinformation","where num='"+ssq[j]+"'").get(0).get("idnumber")+" ");
+				    		 System.out.println("昵称:"+jdbc.List("wechatandqq", "qqinformation","where num='"+ssq[j]+"'").get(0).get("idnumber")+" ");
+				    	     System.out.println("微信:"+listw.get(0).get("idnumber")+" 昵称:"+listw.get(0).get("name"));
+				    	     System.out.println();
+				    	     get=1;break;
+				    	 }
+				     }
+				}
+			}
+		}
+		if(get==0)
+		{
+			System.out.println("无共同好友");
+		}
+		qqsurface();
+	}
+	
+	public static void qqdeletemember() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("--------------删除好友---------------");
+		 listperson=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		ArrayList<Map<String,String>> listzh;
+		ResultSetMetaData rsmdq=null;
+		ArrayList<Map<String,String>> listmember=null;
+		if(listperson.get(0).get("friendlist")==null||listperson.get(0).get("friendlist").equals("null"))
+		{
+			System.out.println("暂无好友");
+		}
+		else
+		{
+			String[] sss=qqgetmember(listperson.get(0).get("friendlist"));
+			for(int i=0;i<sss.length;i++)
+			
+			{		
+				rsmdq=(ResultSetMetaData) jdbc.getrsmd("wechatandqq", "qqinformation");						
+				listmember=jdbc.List("wechatandqq", "qqinformation","where num='"+sss[i]+"'");
+				for(int ii=1;ii<=rsmdq.getColumnCount()-3;ii++)
+				{ 
+					listzh=jdbc.List("wechatandqq", "translate","where english='"+rsmdq.getColumnName(ii)+"'");
+					System.out.print(listzh.get(0).get("chinese")+":"+listmember.get(0).get(rsmdq.getColumnName(ii))+" ");		
+				}
+				System.out.println();				
+			}
+		}
+		System.out.println("-请选择好友编号-");
+		String[] sss=qqgetmember(listperson.get(0).get("friendlist"));
+		int choose=strong(10000);
+		String Choose=String.valueOf(choose);
+		boolean go=false;
+		while(!go)
+		{
+             for(int i=0;i<sss.length;i++)
+             {
+            	 if(Choose.equals(sss[i]))
+            	 {
+            		 go=true;break;
+            		
+            	 }
+             }
+             if(go==false)
+             {
+            	 System.out.println("编号输入有误，请重新输入");
+            	 choose=strong(10000);
+         		 Choose=String.valueOf(choose);
+             }
+		}
+		System.out.println("编号输入正确");
+		for(int j=0;j<sss.length;j++)
+			{
+				if(sss[j].equals(Choose))
+				{
+					sss[j]="0";break;
+				}
+			}
+    	String application="null";
+    	for(int i=0;i<sss.length;i++)
+    	{
+           if(i==0)
+           {
+        	   if(!sss[i].equals("0"))
+        		   application=sss[i];   
+           }
+           else
+           {
+        	   if(!sss[i].equals("0"))
+        	   {
+        		   if(application.equals("null"))
+        		   {
+                	   application=sss[i];
+        		   }
+        		   else
+        		   {
+                	   application=application+"-"+sss[i];
+        		   }
+        	   }
+           }
+    	}
+    	jdbc.Update("wechatandqq", "qqinformation", "update qqinformation set friendlist='"+(application)+"' where idnumber='"+listperson.get(0).get("idnumber")+"'");
+    	
+    	listmember=jdbc.List("wechatandqq", "qqinformation","where num='"+Choose+"'");
+    	String[] sssp=qqgetmember(listmember.get(0).get("friendlist"));
+		for(int j=0;j<sssp.length;j++)
+		{
+			if(sssp[j].equals(listperson.get(0).get("num")))
+			{
+				sssp[j]="0";break;
+			}
+		}
+    	String application2="null";
+    	for(int i=0;i<sssp.length;i++)
+    	{	
+           if(i==0)
+           {
+        	   if(!sssp[i].equals("0"))
+        		   application2=sssp[i];   
+           }
+           else
+           {
+        	   if(!sssp[i].equals("0"))
+        	   application2=application2+"-"+sssp[i];
+           }
+    	}
+    	jdbc.Update("wechatandqq", "qqinformation", "update qqinformation set friendlist='"+(application2)+"' where num='"+Choose+"'");
+
+		System.out.println("好友删除成功");
+		qqsurface();
+	}
+	public static void qqaddmember() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("--------------添加好友---------------");
+		listperson=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		listzs=jdbc.List("wechatandqq", "qqid","where idnumber!='"+listperson.get(0).get("idnumber")+"'");
+		System.out.print("新增好友账号：");
+		Scanner scan=new Scanner(System.in);
+		String newaccountnumber=scan.next();
+		while(newaccountnumber.length()!=10||qqonly(newaccountnumber)||!qqfreshmember(newaccountnumber)||newaccountnumber.equals(listperson.get(0).get("idnumber")))
+		{
+			if(newaccountnumber.length()!=10||qqonly(newaccountnumber))
+			{
+				System.out.println("该账号不存在，请重新输入【0】返回");
+			}
+			else if(!qqfreshmember(newaccountnumber))
+			{
+				System.out.println("该好友已加入，请重新输入【0】返回");
+			}
+			else if(newaccountnumber.equals(listperson.get(0).get("idnumber")))
+			{
+				System.out.println("本人账号无法加好友，请重新输入【0】返回");
+			}
+			newaccountnumber=scan.next();
+			if(newaccountnumber.equals("0"))
+			{
+				qqmembermanage();break;
+			}
+		}
+        System.out.println("-新增好友信息-");
+        listzs=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+newaccountnumber+"'");
+        System.out.println("账号："+newaccountnumber);
+        System.out.println("昵称："+listzs.get(0).get("name"));
+        String qqapplication=listzs.get(0).get("application");
+        if(listzs.get(0).get("application")==null||listzs.get(0).get("application").equals("null"))
+        {
+        	qqapplication=listperson.get(0).get("num");
+        }
+        else
+        {
+        	qqapplication=listzs.get(0).get("application")+"-"+listperson.get(0).get("num");
+        }
+		jdbc.Update("wechatandqq", "qqinformation", "update qqinformation set application='"+(qqapplication)+"' where idnumber='"+newaccountnumber+"'");      
+		System.out.println("好友申请发送中，等待对方接收");
+		qqsurface();
+	}
+	public static void qqopenmemberlist() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("------------打开好友列表-------------");
+		 listperson=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		 ArrayList<Map<String,String>> listzh;
+		 String[] ss;
+		ResultSetMetaData rsmdq=null;
+		ArrayList<Map<String,String>> listmember=null;
+		if(listperson.get(0).get("friendlist")==null||listperson.get(0).get("friendlist").equals("null"))
+		{
+			System.out.println("暂无好友");
+		}
+		else
+		{
+			ss=qqgetmember(listperson.get(0).get("friendlist"));
+			for(int i=0;i<ss.length;i++)
+			
+			{		
+				rsmdq=(ResultSetMetaData) jdbc.getrsmd("wechatandqq", "qqinformation");						
+				listmember=jdbc.List("wechatandqq", "qqinformation","where num='"+ss[i]+"'");
+				for(int ii=1;ii<=rsmdq.getColumnCount()-3;ii++)
+				{ 
+					listzh=jdbc.List("wechatandqq", "translate","where english='"+rsmdq.getColumnName(ii)+"'");
+					System.out.print(listzh.get(0).get("chinese")+":"+listmember.get(0).get(rsmdq.getColumnName(ii))+" ");		
+				}
+				System.out.println();				
+			}
+		}
+		qqsurface();
+	}
+	public static void qqgroupmanage() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("----------------QQ群管理-------------");
+		System.out.println("【1】添加群\t\t【2】打开群列表");
+		System.out.println("【3】创建群聊\t\t【4】查看验证消息");
+		System.out.println("-请选择-");
+		int choose=strong(4);
+		switch(choose)
+		{
+		case 1:qqaddgroup();break;
+		case 2:qqopengrouplist();break;
+		case 3:qqbuildgroup();break;
+		case 4:qqcheckgroupinformation();break;
+		}
+		
+	}
+	public static void qqcheckgroupinformation() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("--------------QQ查看验证消息-------------");
+  		 listperson=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+        
+ 		if(listperson.get(0).get("grouplist")==null||listperson.get(0).get("grouplist").equals("null"))
+		{
+			System.out.println("暂无消息");
+			qqsurface();
+		}
+        else
+        {			
+		  String[] ss;
+		  String[] ddd;
+		  ArrayList<Map<String,String>> listgroup=null;
+		  ss=qqgetmember(listperson.get(0).get("grouplist"));
+		  for(int i=0;i<ss.length;i++)		
+		  {		
+			listgroup=jdbc.List("wechatandqq", "qqgroup","where num='"+ss[i]+"'");
+			ddd=qqgetmember(listgroup.get(0).get("managemember"));
+			for(int j=0;j<ddd.length;j++)
+			{
+				if(ddd[i].equals(listperson.get(0).get("num")))
+				{
+				   if(listgroup.get(0).get("application")==null||listgroup.get(0).get("application").equals("null"))
+					{
+						System.out.println("暂无消息");
+					}
+					else
+					{
+			           System.out.println("-好友申请信息-");
+			     	   ArrayList<Map<String,String>> listmember=null;
+					   String[] sss=qqgetmember(listgroup.get(0).get("application"));
+						for(int iq=0;iq<sss.length;iq++)
+						{		
+							listmember=jdbc.List("wechatandqq", "qqinformation","where num='"+sss[iq]+"'");
+			                System.out.println("编号："+listmember.get(0).get("num"));
+			                System.out.println("账号："+listmember.get(0).get("idnumber"));
+			                System.out.println("昵称："+listmember.get(0).get("name"));
+							System.out.println("是否同意该好友申请【1】同意，【2】拒绝");
+							int choose=strong(2);
+							if(choose==1)
+							{
+								
+								String newfriendlist;			 		    		
+								newfriendlist=listgroup.get(0).get("groupmember")+"-"+listmember.get(0).get("num");			    
+						    	jdbc.Update("wechatandqq", "qqgroup", "update qqgroup set groupmember='"+(newfriendlist)+"' where groupid='"+listgroup.get(0).get("groupid")+"'");
+								
+						    	String newfriendlist2=listmember.get(0).get("grouplist");
+						    	if(listmember.get(0).get("grouplist")==null||listmember.get(0).get("grouplist").equals("null"))
+						    	{
+						    		newfriendlist2=listgroup.get(0).get("num");
+						    	}
+						    	else
+								newfriendlist2=listmember.get(0).get("grouplist")+"-"+listgroup.get(0).get("num");
+						    	jdbc.Update("wechatandqq", "qqinformation", "update qqinformation set grouplist='"+(newfriendlist2)+"' where idnumber='"+listmember.get(0).get("idnumber")+"'");                      
+								for(int jj=0;jj<sss.length;jj++)
+								{
+									if(sss[jj].equals(sss[iq]))
+									{
+										sss[iq]="0";break;
+									}
+								}
+								qqrefreshgroupapplication(sss,listgroup.get(0).get("groupid"));
+							}
+							else if(choose==2)
+							{
+								for(int jj=0;jj<sss.length;jj++)
+								{
+									if(sss[jj].equals(sss[iq]))
+									{
+										sss[iq]="0";break;
+									}
+								}
+								qqrefreshgroupapplication(sss,listgroup.get(0).get("groupid"));
+							}
+						}
+					}
+					break;
+				}
+			}
+			System.out.println();				
+		}
+
+ 		qqsurface();
+        }
+	}
+	public static void qqaddgroup() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("---------------QQ添加群--------------");
+		listperson=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		listzs=jdbc.List("wechatandqq", "qqid","where idnumber!='"+listperson.get(0).get("idnumber")+"'");
+		System.out.print("新增群账号：");
+		Scanner scan=new Scanner(System.in);
+		String newaccountnumber=scan.next();
+		while(newaccountnumber.length()!=10||qqonlygroup(newaccountnumber)||!qqfreshgroup(newaccountnumber))
+		{
+			if(newaccountnumber.length()!=10||qqonlygroup(newaccountnumber))
+			{
+				System.out.println("该账号不存在，请重新输入【0】返回");
+			}
+			else if(!qqfreshgroup(newaccountnumber))
+			{
+				System.out.println("该群已加入，请重新输入【0】返回");
+			}
+			newaccountnumber=scan.next();
+			if(newaccountnumber.equals("0"))
+			{
+				qqmembermanage();break;
+			}
+		}
+        System.out.println("-新增群信息-");
+        listzs=jdbc.List("wechatandqq", "qqgroup","where groupid='"+newaccountnumber+"'");
+        System.out.println("账号："+newaccountnumber);
+        System.out.println("昵称："+listzs.get(0).get("groupname"));
+        String qqapplication=listzs.get(0).get("application");
+        if(listzs.get(0).get("application")==null||listzs.get(0).get("application").equals("null"))
+        {
+        	qqapplication=listperson.get(0).get("num");
+        }
+        else
+        {
+        	qqapplication=listzs.get(0).get("application")+"-"+listperson.get(0).get("num");
+        }
+		jdbc.Update("wechatandqq", "qqgroup", "update qqgroup set application='"+(qqapplication)+"' where groupid='"+newaccountnumber+"'");      
+		System.out.println("加群申请发送中，等待管理员确认接收");
+		qqsurface();
+	}
+	public static void qqbuildgroup() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("---------------QQ创建群聊------------");
+		 listperson=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		System.out.print("请输入群昵称：");
+		Scanner scan=new Scanner(System.in);
+		String groupname=scan.next();
+		Random random=new Random();
+		String accountnumber="254700"+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10));
+		while(!qqonly(accountnumber))
+		{
+			accountnumber="254700"+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10));
+
+		}
+		jdbc.Update("wechatandqq", "qqgroup", "insert into qqgroup(groupid,groupname,groupmember,managemember,owner) values('"+accountnumber+"','"+groupname+"','"+listperson.get(0).get("num")+"','"+listperson.get(0).get("num")+"','"+listperson.get(0).get("num")+"')");		
+        String grouplist=listperson.get(0).get("grouplist");
+        if(listperson.get(0).get("grouplist")==null||listperson.get(0).get("grouplist").equals("null"))
+        {
+        	grouplist=jdbc.List("wechatandqq", "qqgroup","where groupid='"+accountnumber+"'").get(0).get("num");
+        }
+        else
+        {
+        	grouplist=listperson.get(0).get("grouplist")+"-"+jdbc.List("wechatandqq", "qqgroup","where groupid='"+accountnumber+"'").get(0).get("num");
+        }
+		jdbc.Update("wechatandqq", "qqinformation", "update qqinformation set grouplist='"+(grouplist)+"' where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		System.out.println("创建成功，群账号为："+accountnumber);
+		qqsurface();
+
+	}
+	public static void qqopengrouplist() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("---------------QQ群列表--------------");
+		listperson=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		if(listperson.get(0).get("grouplist")==null||listperson.get(0).get("grouplist").equals("null"))
+		{
+			System.out.println("尚未加群");
+			qqsurface();
+		}
+		else
+		{
+			System.out.println("-请选择-");
+			ArrayList<Map<String,String>> listzh;
+			String[] ss;
+			ResultSetMetaData rsmdq=null;
+			ArrayList<Map<String,String>> listgroup=null;
+			ss=qqgetmember(listperson.get(0).get("grouplist"));
+			for(int i=0;i<ss.length;i++)		
+			{		
+				rsmdq=(ResultSetMetaData) jdbc.getrsmd("wechatandqq", "qqgroup");						
+				listgroup=jdbc.List("wechatandqq", "qqgroup","where num='"+ss[i]+"'");
+				for(int ii=1;ii<=3;ii++)
+				{ 
+					listzh=jdbc.List("wechatandqq", "translate","where english='"+rsmdq.getColumnName(ii)+"'");
+					System.out.print(listzh.get(0).get("chinese")+":"+listgroup.get(0).get(rsmdq.getColumnName(ii))+" ");		
+				}
+				System.out.println();				
+			}
+	
+			ArrayList<Map<String,String>> listg=null;
+			String[] sss=qqgetmember(listperson.get(0).get("grouplist"));
+			int choose=strong(10000);
+			String Choose=String.valueOf(choose);
+			boolean go=false;
+			while(!go)
+			{
+	             for(int i=0;i<sss.length;i++)
+	             {
+	            	 if(Choose.equals(sss[i]))
+	            	 {
+	            		 go=true;break;
+	            		
+	            	 }
+	             }
+	             if(go==false)
+	             {
+	            	 System.out.println("编号输入有误，请重新输入");
+	            	 choose=strong(10000);
+	         		 Choose=String.valueOf(choose);
+	             }
+			}
+			System.out.println("编号输入正确");
+			listg=jdbc.List("wechatandqq", "qqgroup","where num='"+Choose+"'");
+			System.out.println("【1】查询群成员\t\t【2】退出群");
+			System.out.println("【3】建立讨论组\t\t【4】管理员设置");
+			int choosetwo=strong(4);
+			switch(choosetwo)
+			{
+			case 1:qqgroupmemberlist(listg);break;
+			case 2:qqexitgroup(listg);break;
+			case 3:qqbuildsmallgroup(listg);break;
+			case 4:qqsetmanager(listg);break;
+			}
+		}
+		
+	}
+	public static void qqsetmanager(ArrayList<Map<String, String>> listg) throws SQLException {
+		System.out.println("--------------QQ管理员设置-------------");
+		listperson=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		if(!listg.get(0).get("owner").equals(listperson.get(0).get("num")))
+		{
+			System.out.println("非群主无法行使此功能");
+		}
+		else
+		{
+		System.out.println("-管理员-");
+		String ownernum=jdbc.List("wechatandqq", "qqinformation","where num='"+listg.get(0).get("owner")+"'").get(0).get("num");
+		String[] ss;
+		ResultSetMetaData rsmdq=null;
+		ArrayList<Map<String,String>> listmember=null;
+		ss=qqgetmember(listg.get(0).get("managemember"));
+		int get=0;
+		for(int i=0;i<ss.length;i++)		
+		{		
+			if(!ss[i].equals(ownernum))
+			{
+				listmember=jdbc.List("wechatandqq", "qqinformation","where num='"+ss[i]+"'");
+				System.out.print("编号："+listmember.get(0).get("num")+" ");
+				System.out.print("账号："+listmember.get(0).get("idnumber")+" ");
+				System.out.println("昵称："+listmember.get(0).get("name"));
+				System.out.println();
+				get=1;
+			}
+		}
+		if(get==0)
+		{
+			System.out.println("群主未设置管理员");
+		}
+		System.out.println("-非管理员-");
+		String[] ssf;
+		ssf=qqgetmember(listg.get(0).get("groupmember"));
+		int get3=0;
+		int get2=0;
+		for(int i=0;i<ssf.length;i++)		
+		{		
+			for(int ii=0;ii<ss.length;ii++)
+			{
+				if(ss[ii].equals(ssf[i]))
+				{
+					get2=1;break;
+				}
+			}
+			if(get2==0)
+			{
+				rsmdq=(ResultSetMetaData) jdbc.getrsmd("wechatandqq", "qqinformation");						
+				listmember=jdbc.List("wechatandqq", "qqinformation","where num='"+ssf[i]+"'");
+				System.out.print("编号："+listmember.get(0).get("num")+" ");
+				System.out.print("账号："+listmember.get(0).get("idnumber")+" ");
+				System.out.println("昵称："+listmember.get(0).get("name"));
+				System.out.println();
+				get3=1;
+			}
+			get2=0;
+		}
+		if(get3==0)
+		{
+			System.out.println("暂无非管理员成员");
+		}
+		System.out.println("【1】设置管理员，【2】取消管理员");
+		int choose=strong(2);
+		if(choose==1)
+		{
+			if(get3==0)
+			{
+				System.out.println("暂无非管理员成员");
+				qqsurface();
+			}
+			else
+			{
+				
+				String[] sss=qqgetmember(listg.get(0).get("managemember"));
+				System.out.println("请输入需设置管理员的编号");
+				int choose2=strong(10000);
+				String Choose=String.valueOf(choose2);
+				boolean go=false;
+				int b=1;
+				while(!go)
+				{
+		             for(int i=0;i<ssf.length;i++)
+		             {
+		            	 
+		            	 if(Choose.equals(ssf[i]))
+		            	 {
+				         		for(int ii=0;ii<sss.length;ii++)		
+				        		{		
+		                              if(sss[ii].equals(Choose))
+		                              {
+		                            	  b=0;break;
+		                              }
+				        		}
+				         		if(b==0)
+				         		{
+				         			go=false;break;
+				         		}
+				         		else
+				         		{
+				         			go=true;break;
+				         		}
+		            		
+		            	 }
+		             }
+		             if(go==false)
+		             {
+		            	 System.out.println("编号输入有误，请重新输入");
+		            	 choose=strong(10000);
+		         		 Choose=String.valueOf(choose);
+		             }
+				}
+				System.out.println("编号输入正确");
+				String application=listg.get(0).get("managemember")+"-"+Choose;
+		    	jdbc.Update("wechatandqq", "qqgroup", "update qqgroup set managemember='"+(application)+"' where groupid='"+listg.get(0).get("groupid")+"'");
+		    
+			}
+		}
+		else if(choose==2)
+		{
+			if(get==0)
+			{
+				System.out.println("暂无管理员");
+				qqsurface();
+			}
+			else
+			{
+				System.out.println("请输入需取消管理员的编号");
+				String[] sss=qqgetmember(listg.get(0).get("managemember"));
+				 int choose3=strong(10000);
+				String Choose=String.valueOf(choose3);
+				boolean go=false;
+				while(!go)
+				{
+		             for(int i=0;i<sss.length;i++)
+		             {
+		            	 if(Choose.equals(sss[i])&&!(Choose.equals(listperson.get(0).get("num"))))
+		            	 {
+		            		 go=true;break;
+		            		
+		            	 }
+		             }
+		             if(go==false)
+		             {
+		            	 System.out.println("编号输入有误，请重新输入");
+		            	 choose=strong(10000);
+		         		 Choose=String.valueOf(choose);
+		             }
+				}
+				System.out.println("编号输入正确");
+				for(int j=0;j<sss.length;j++)
+					{
+						if(sss[j].equals(Choose))
+						{
+							sss[j]="0";break;
+						}
+					}
+		    	String application="null";
+		    	for(int i=0;i<sss.length;i++)
+		    	{
+		           if(i==0)
+		           {
+		        	   if(!sss[i].equals("0"))
+		        		   application=sss[i];   
+		           }
+		           else
+		           {
+		        	   if(!sss[i].equals("0"))
+		        	   {
+		        		   if(application.equals("null"))
+		        		   {
+		                	   application=sss[i];
+		        		   }
+		        		   else
+		        		   {
+		                	   application=application+"-"+sss[i];
+		        		   }
+		        	   }
+		           }
+		    	}
+		    	jdbc.Update("wechatandqq", "qqgroup", "update qqgroup set managemember='"+(application)+"' where groupid='"+listg.get(0).get("groupid")+"'");
+			}
+		}
+		qqsurface();	
+		}
+	}
+	public static void qqbuildsmallgroup(ArrayList<Map<String, String>> listg) throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("-------------QQ建立讨论组------------");
+		System.out.println("-----------尚未更新，敬请期待---------");
+
+		qqsurface();
+	}
+	public static void qqgroupmemberlist(ArrayList<Map<String, String>> listg) throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("-------------QQ查看群成员------------");
+		listperson=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		String ownername=jdbc.List("wechatandqq", "qqinformation","where num='"+listg.get(0).get("owner")+"'").get(0).get("name");
+		String ownernumber=jdbc.List("wechatandqq", "qqinformation","where num='"+listg.get(0).get("owner")+"'").get(0).get("idnumber");
+		String ownernum=jdbc.List("wechatandqq", "qqinformation","where num='"+listg.get(0).get("owner")+"'").get(0).get("num");
+		System.out.println("-群主-");
+		System.out.print("账号："+ownernumber+" ");
+		System.out.println("昵称："+ownername);
+		System.out.println("-管理员-");
+	    ArrayList<Map<String,String>> listzh;
+		String[] ss;
+		ResultSetMetaData rsmdq=null;
+		ArrayList<Map<String,String>> listmember=null;
+		ss=qqgetmember(listg.get(0).get("managemember"));
+		int get=0;
+		for(int i=0;i<ss.length;i++)		
+		{		
+			if(!ss[i].equals(ownernum))
+			{
+				listmember=jdbc.List("wechatandqq", "qqinformation","where num='"+ss[i]+"'");
+				System.out.print("账号："+listmember.get(0).get("idnumber")+" ");
+				System.out.println("昵称："+listmember.get(0).get("name"));
+				System.out.println();
+				get=1;
+			}
+		}
+		if(get==0)
+		{
+			System.out.println("群主未设置管理员");
+		}
+		ss=qqgetmember(listg.get(0).get("groupmember"));
+		System.out.println("-群成员-");
+		for(int i=0;i<ss.length;i++)		
+			{		
+				rsmdq=(ResultSetMetaData) jdbc.getrsmd("wechatandqq", "qqinformation");						
+				listmember=jdbc.List("wechatandqq", "qqinformation","where num='"+ss[i]+"'");
+				for(int ii=1;ii<=rsmdq.getColumnCount()-3;ii++)
+				{ 
+					listzh=jdbc.List("wechatandqq", "translate","where english='"+rsmdq.getColumnName(ii)+"'");
+					System.out.print(listzh.get(0).get("chinese")+":"+listmember.get(0).get(rsmdq.getColumnName(ii))+" ");		
+				}
+				System.out.println();				
+			}
+    	qqsurface();
+	}
+	public static void qqexitgroup(ArrayList<Map<String, String>> listg) throws SQLException {
+		// TODO Auto-generated method stub		
+		System.out.println("--------------QQ退出群聊-------------");
+		listperson=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		String[] sss;
+		String[] pp;
+		if(listg.get(0).get("owner").equals(listperson.get(0).get("num")))
+		{
+	    	jdbc.Update("wechatandqq", "qqgroup", "delete from qqgroup where groupid ='"+listg.get(0).get("groupid")+"'");
+			pp=qqgetmember(listg.get(0).get("groupmember"));
+             for(int i=0;i<pp.length;i++)
+             {
+            	 
+            	 listzs=jdbc.List("wechatandqq", "qqinformation","where num='"+pp[i]+"'");
+         		sss=qqgetmember(listzs.get(0).get("grouplist"));
+        		for(int j=0;j<sss.length;j++)
+        		{
+        			if(sss[j].equals(listg.get(0).get("num")))
+        			{
+        				sss[j]="0";break;
+        			}
+        		}
+            String application="null";
+        	for(int ii=0;ii<sss.length;ii++)
+        	{
+               if(ii==0)
+               {
+            	   if(!sss[ii].equals("0"))
+            		   application=sss[ii];   
+               }
+               else
+               {
+            	   if(!sss[ii].equals("0"))
+            	   {
+            		   if(application.equals("null"))
+            		   {
+                    	   application=sss[ii];
+            		   }
+            		   else
+            		   {
+                    	   application=application+"-"+sss[ii];
+            		   }
+            	   }
+               }
+        	}
+        	jdbc.Update("wechatandqq", "qqinformation", "update qqinformation set grouplist='"+(application)+"' where idnumber='"+listzs.get(0).get("idnumber")+"'");
+            	 
+             }
+	    	System.out.println("由于您是群主，该群已解散");
+		}
+		else
+		{
+			sss=qqgetmember(listg.get(0).get("groupmember"));
+			for(int j=0;j<sss.length;j++)
+			{
+				if(sss[j].equals(listperson.get(0).get("num")))
+				{
+					sss[j]="0";break;
+				}
+			}
+    	String application="null";
+    	for(int i=0;i<sss.length;i++)
+    	{
+           if(i==0)
+           {
+        	   if(!sss[i].equals("0"))
+        		   application=sss[i];   
+           }
+           else
+           {
+        	   if(!sss[i].equals("0"))
+        	   {
+        		   if(application.equals("null"))
+        		   {
+                	   application=sss[i];
+        		   }
+        		   else
+        		   {
+                	   application=application+"-"+sss[i];
+        		   }
+        	   }
+           }
+    	}
+    	jdbc.Update("wechatandqq", "qqgroup", "update qqgroup set groupmember='"+(application)+"' where groupid='"+listg.get(0).get("groupid")+"'");
+		sss=qqgetmember(listperson.get(0).get("grouplist"));
+		for(int j=0;j<sss.length;j++)
+		{
+			if(sss[j].equals(listg.get(0).get("num")))
+			{
+				sss[j]="0";break;
+			}
+		}
+     application="null";
+	for(int i=0;i<sss.length;i++)
+	{
+       if(i==0)
+       {
+    	   if(!sss[i].equals("0"))
+    		   application=sss[i];   
+       }
+       else
+       {
+    	   if(!sss[i].equals("0"))
+    	   {
+    		   if(application.equals("null"))
+    		   {
+            	   application=sss[i];
+    		   }
+    		   else
+    		   {
+            	   application=application+"-"+sss[i];
+    		   }
+    	   }
+       }
+	}
+	jdbc.Update("wechatandqq", "qqinformation", "update qqinformation set grouplist='"+(application)+"' where idnumber='"+listperson.get(0).get("idnumber")+"'");
+    
+		String[] ss=qqgetmember(listg.get(0).get("managemember"));
+		int a=0;
+        for(int i=0;i<ss.length;i++)
+        {
+        	if(ss[i].equals(listperson.get(0).get("num")))
+        	{
+        		a=1;break;
+        	}
+        }
+        if(a==1)
+        {
+        	sss=qqgetmember(listg.get(0).get("managemember"));
+			for(int j=0;j<sss.length;j++)
+			{
+				if(sss[j].equals(listperson.get(0).get("num")))
+				{
+					sss[j]="0";break;
+				}
+			}
+         application="null";
+    	for(int i=0;i<sss.length;i++)
+    	{
+           if(i==0)
+           {
+        	   if(!sss[i].equals("0"))
+        		   application=sss[i];   
+           }
+           else
+           {
+        	   if(!sss[i].equals("0"))
+        	   {
+        		   if(application.equals("null"))
+        		   {
+                	   application=sss[i];
+        		   }
+        		   else
+        		   {
+                	   application=application+"-"+sss[i];
+        		   }
+        	   }
+           }
+    	}
+    	jdbc.Update("wechatandqq", "qqgroup", "update qqgroup set managemember='"+(application)+"' where groupid='"+listg.get(0).get("groupid")+"'");
+        
+        }
+		}      
+		qqsurface();
+	}
+	public static boolean qqonly(String sss)
+	{
+		ArrayList<Map<String,String>> listp=jdbc.List("wechatandqq", "qqid");
+		listperson=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		boolean go=true;
+		if(listperson.size()==0)
+		{
+			return go;
+		}
+		for(int i=0;i<listp.size();i++)
+		{
+			if(sss.equals(listp.get(i).get("idnumber")))
+			{
+                go=false;break;
+			}
+		}
+		return go;
+	}
+	public static boolean qqonlygroup(String sss)
+	{
+		ArrayList<Map<String,String>> listp=jdbc.List("wechatandqq", "qqgroup");
+		listperson=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		boolean go=true;
+		for(int i=0;i<listp.size();i++)
+		{
+			if(sss.equals(listp.get(i).get("groupid")))
+			{
+                go=false;break;
+			}
+		}
+		return go;
+	}
+	public static int strong(int n) throws SQLException////控制用户选择功能的输入格式
+	{
+		boolean go=false;
+		int num=0;
+		Scanner scan=new Scanner(System.in);
+		String ss=scan.next();
+		while(!go)
+		{
+			while(!number(ss))//使在用户输入错误之后给用户提示信息
+			{
+				System.out.println("输入有误，请重新输入");
+				ss=scan.next();
+			}	
+			 num=Integer.valueOf(ss);
+			 if(num==0)
+			 {
+				 qqsurface();break;
+			 }
+			 for(int i=1;i<=n;i++)
+			{
+				if(num==i)
+				{
+					go=true;break;
+				}
+			}
+			 if(go==false)
+			 {
+					System.out.println("输入有误，请重新输入");
+					ss=scan.next();
+			 }
+		}
+		return num;
+		
+	}
+	public static String[] qqgetmember(String ss)
+	{
+		String[] s=ss.split("-");
+		return s;
+	}	
+    public static boolean qqfreshmember(String sss)
+    {
+		listperson=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		boolean go=true;
+		ArrayList<Map<String,String>> listmember=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+sss+"'");
+		if(listperson.get(0).get("friendlist")==null||listperson.get(0).get("friendlist").equals("null"))
+		{
+			
+		}
+		else
+		{   ;
+			String[] ss=qqgetmember(listperson.get(0).get("friendlist"));
+			for(int i=0;i<ss.length;i++)
+			{
+				if(ss[i].equals(listmember.get(0).get("num")))
+				{
+	                go=false;break;
+				}
+			}
+		}
+
+		return go;
+    }
+    public static boolean qqfreshgroup(String sss)
+    {
+		listperson=jdbc.List("wechatandqq", "qqinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		boolean go=true;
+		ArrayList<Map<String,String>> listgroup=jdbc.List("wechatandqq", "qqgroup","where groupid='"+sss+"'");
+		if(listperson.get(0).get("grouplist")==null||listperson.get(0).get("grouplist").equals("null"))
+		{
+			
+		}
+		else
+		{   ;
+			String[] ss=qqgetmember(listperson.get(0).get("grouplist"));
+			for(int i=0;i<ss.length;i++)
+			{
+				if(ss[i].equals(listgroup.get(0).get("num")))
+				{
+	                go=false;break;
+				}
+			}
+		}
+
+		return go;
+    }
+    public static void qqrefreshmemberapplication(String[] sss)
+    {
+    	String application="null";
+    	for(int i=0;i<sss.length;i++)
+    	{
+           if(i==0)
+           {
+        	   if(!sss[i].equals("0"))
+        		   application=sss[i];   
+           }
+           else
+           {
+        	   if(!sss[i].equals("0"))
+        	   application=application+"-"+sss[i];
+           }
+    	}
+    	jdbc.Update("wechatandqq", "qqinformation", "update qqinformation set application='"+(application)+"' where idnumber='"+listperson.get(0).get("idnumber")+"'");
+    }
+    public static void qqrefreshgroupapplication(String[] sss,String groupid)
+    {
+    	String application="null";
+    	for(int i=0;i<sss.length;i++)
+    	{
+           if(i==0)
+           {
+        	   if(!sss[i].equals("0"))
+        		   application=sss[i];   
+           }
+           else
+           {
+        	   if(!sss[i].equals("0"))
+        	   application=application+"-"+sss[i];
+           }
+    	}
+    	jdbc.Update("wechatandqq", "qqgroup", "update qqgroup set application='"+(application)+"' where groupid='"+groupid+"'");
+    }
+    //--------------------qq类结束--------------------
+    //--------------------微博类开始--------------------  
+	public static void blogregister() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("----------------微博注册---------------");
+		System.out.println("QQ账号登录注册");
+		Scanner scan=new Scanner(System.in);
+		  String accountnumber,password;
+		  System.out.print("QQ账号:");
+		  accountnumber=scan.next();
+		  while((accountnumber.length()!=10)||!number(accountnumber))
+			 {
+				System.out.println("输入有误，请重新输入");
+				accountnumber=scan.next();
+			 }
+		  listzs=jdbc.List("wechatandqq", "qqid","where idnumber='"+accountnumber+"'");
+		  if(listzs.size()==0)
+		  {
+ 		      System.out.println("没有该用户数据,返回主界面");
+			  mainsurface();
+		  }
+		  else
+		  {
+				System.out.print("密码:");
+				password=scan.next();
+		    	   while(!password.equals(listzs.get(0).get("password")))
+		    	   {
+		    		   System.out.println("密码输入错误!");
+		    		   System.out.print("密码:");
+		    		   password=scan.next();
+		    	   }		  
+		    		   System.out.println("QQ登录成功！");
+		    		   System.out.print("请输入微博昵称：");
+		    			String name=scan.next();
+		    			System.out.print("请输入出生时间：");
+		    			String birthdata=scan.next();
+		    			Date d=new Date();
+		    			SimpleDateFormat sdf=new SimpleDateFormat("y年M月d日h时：m分：s秒");
+		    			String data=sdf.format(d);
+		    			System.out.print("请输入所在地：");
+		    			String position=scan.next();
+		    		    jdbc.Update("wechatandqq", "bloginformation", "insert into bloginformation(idnumber,name,birthdata,tage,position) values('"+accountnumber+"','"+name+"','"+birthdata+"','"+data+"','"+position+"')");
+			    		 jdbc.Update("wechatandqq", "qqid", "update qqid set weblog=1 where idnumber='"+accountnumber+"'");
+			    		 System.out.println("微博注册成功");
+			    		 listperson=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+accountnumber+"'");
+			    	
+		  }		
+
+		blogsurface();
+	}
+	public static void blogsurface() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("【1】微博群管理\t\t【2】好友管理");
+		System.out.println("【3】返回主界面");
+		System.out.println("-请选择-");
+		int choose=strongblog(3);
+		switch(choose)
+		{
+		case 1:bloggroupmanage();break;
+		case 2:blogmembermanage();break;
+		case 3:mainsurface();break;
+		}
+	}
+	public static void blogmembermanage() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("---------------微博好友管理--------------");
+		System.out.println("【1】好友列表\t\t【2】添加好友");
+		System.out.println("【3】删除好友\t\t【4】查看验证消息  ");
+		System.out.println("-请选择-"); 
+		int choose=strongblog(4);
+		switch(choose)
+		{
+		case 1:blogopenmemberlist();break;
+		case 2:blogaddmember();break;
+		case 3:blogdeletemember();break;
+		case 4:blogcheckmemberinformation();break;
+		}
+	}
+	public static void blogcheckmemberinformation() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("--------------微博查看验证消息-------------");
+ 		 listperson=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+       
+		if(listperson.get(0).get("grouplist")==null||listperson.get(0).get("grouplist").equals("null"))
+		{
+			System.out.println("暂无消息");
+			blogsurface();
+		}
+       else
+       {			
+		  String[] ss;
+		  String[] ddd;
+		  ArrayList<Map<String,String>> listgroup=null;
+		  ss=bloggetmember(listperson.get(0).get("grouplist"));
+		  for(int i=0;i<ss.length;i++)		
+		  {		
+			listgroup=jdbc.List("wechatandqq", "bloggroup","where num='"+ss[i]+"'");
+			ddd=bloggetmember(listgroup.get(0).get("managemember"));
+			for(int j=0;j<ddd.length;j++)
+			{
+				if(ddd[i].equals(listperson.get(0).get("num")))
+				{
+				   if(listgroup.get(0).get("application")==null||listgroup.get(0).get("application").equals("null"))
+					{
+						System.out.println("暂无消息");
+					}
+					else
+					{
+			           System.out.println("-好友申请信息-");
+			     	   ArrayList<Map<String,String>> listmember=null;
+					   String[] sss=bloggetmember(listgroup.get(0).get("application"));
+						for(int iq=0;iq<sss.length;iq++)
+						{		
+							listmember=jdbc.List("wechatandqq", "bloginformation","where num='"+sss[iq]+"'");
+			                System.out.println("编号："+listmember.get(0).get("num"));
+			                System.out.println("账号："+listmember.get(0).get("idnumber"));
+			                System.out.println("昵称："+listmember.get(0).get("name"));
+							System.out.println("是否同意该好友申请【1】同意，【2】拒绝");
+							int choose=strongblog(2);
+							if(choose==1)
+							{
+								
+								String newfriendlist;			 		    		
+								newfriendlist=listgroup.get(0).get("groupmember")+"-"+listmember.get(0).get("num");			    
+						    	jdbc.Update("wechatandqq", "bloggroup", "update bloggroup set groupmember='"+(newfriendlist)+"' where groupid='"+listgroup.get(0).get("groupid")+"'");
+								
+						    	String newfriendlist2=listmember.get(0).get("grouplist");
+						    	if(listmember.get(0).get("grouplist")==null||listmember.get(0).get("grouplist").equals("null"))
+						    	{
+						    		newfriendlist2=listgroup.get(0).get("num");
+						    	}
+						    	else
+								newfriendlist2=listmember.get(0).get("grouplist")+"-"+listgroup.get(0).get("num");
+						    	jdbc.Update("wechatandqq", "bloginformation", "update bloginformation set grouplist='"+(newfriendlist2)+"' where idnumber='"+listmember.get(0).get("idnumber")+"'");                      
+								for(int jj=0;jj<sss.length;jj++)
+								{
+									if(sss[jj].equals(sss[iq]))
+									{
+										sss[iq]="0";break;
+									}
+								}
+								blogrefreshgroupapplication(sss,listgroup.get(0).get("groupid"));
+							}
+							else if(choose==2)
+							{
+								for(int jj=0;jj<sss.length;jj++)
+								{
+									if(sss[jj].equals(sss[iq]))
+									{
+										sss[iq]="0";break;
+									}
+								}
+								blogrefreshgroupapplication(sss,listgroup.get(0).get("groupid"));
+							}
+						}
+					}
+					break;
+				}
+			}
+			System.out.println();				
+		}
+
+		  blogsurface();
+       }	
+	}
+	public static void blogrefreshgroupapplication(String[] sss, String string) {
+		// TODO Auto-generated method stub
+    	String application="null";
+    	for(int i=0;i<sss.length;i++)
+    	{
+           if(i==0)
+           {
+        	   if(!sss[i].equals("0"))
+        		   application=sss[i];   
+           }
+           else
+           {
+        	   if(!sss[i].equals("0"))
+        	   application=application+"-"+sss[i];
+           }
+    	}
+    	jdbc.Update("wechatandqq", "bloggroup", "update bloggroup set application='"+(application)+"' where groupid='"+string+"'");
+    
+	}
+	public static void blogdeletemember() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("--------------删除好友---------------");
+		 listperson=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		ArrayList<Map<String,String>> listzh;
+		ResultSetMetaData rsmdq=null;
+		ArrayList<Map<String,String>> listmember=null;
+		if(listperson.get(0).get("friendlist")==null||listperson.get(0).get("friendlist").equals("null"))
+		{
+			System.out.println("暂无好友");
+		}
+		else
+		{
+			String[] sss=bloggetmember(listperson.get(0).get("friendlist"));
+			for(int i=0;i<sss.length;i++)
+			
+			{		
+				rsmdq=(ResultSetMetaData) jdbc.getrsmd("wechatandqq", "bloginformation");						
+				listmember=jdbc.List("wechatandqq", "bloginformation","where num='"+sss[i]+"'");
+				for(int ii=1;ii<=rsmdq.getColumnCount()-3;ii++)
+				{ 
+					listzh=jdbc.List("wechatandqq", "translate","where english='"+rsmdq.getColumnName(ii)+"'");
+					System.out.print(listzh.get(0).get("chinese")+":"+listmember.get(0).get(rsmdq.getColumnName(ii))+" ");		
+				}
+				System.out.println();				
+			}
+		}
+		System.out.println("-请选择好友编号-");
+
+		String[] sss=bloggetmember(listperson.get(0).get("friendlist"));
+		int choose=strongblog(10000);
+		String Choose=String.valueOf(choose);
+		boolean go=false;
+		while(!go)
+		{
+            for(int i=0;i<sss.length;i++)
+            {
+           	 if(Choose.equals(sss[i]))
+           	 {
+           		 go=true;break;
+           		
+           	 }
+            }
+            if(go==false)
+            {
+           	 System.out.println("编号输入有误，请重新输入");
+           	 choose=strongblog(10000);
+        		 Choose=String.valueOf(choose);
+            }
+		}
+		System.out.println("编号输入正确");
+		for(int j=0;j<sss.length;j++)
+			{
+				if(sss[j].equals(Choose))
+				{
+					sss[j]="0";break;
+				}
+			}
+   	String application="null";
+   	for(int i=0;i<sss.length;i++)
+   	{
+          if(i==0)
+          {
+       	   if(!sss[i].equals("0"))
+       		   application=sss[i];   
+          }
+          else
+          {
+       	   if(!sss[i].equals("0"))
+       	   {
+       		   if(application.equals("null"))
+       		   {
+               	   application=sss[i];
+       		   }
+       		   else
+       		   {
+               	   application=application+"-"+sss[i];
+       		   }
+       	   }
+          }
+   	}
+   	jdbc.Update("wechatandqq", "bloginformation", "update bloginformation set friendlist='"+(application)+"' where idnumber='"+listperson.get(0).get("idnumber")+"'");
+   	
+   	listmember=jdbc.List("wechatandqq", "bloginformation","where num='"+Choose+"'");
+   	String[] sssp=bloggetmember(listmember.get(0).get("friendlist"));
+		for(int j=0;j<sssp.length;j++)
+		{
+			if(sssp[j].equals(listperson.get(0).get("num")))
+			{
+				sssp[j]="0";break;
+			}
+		}
+   	String application2="null";
+   	for(int i=0;i<sssp.length;i++)
+   	{	
+          if(i==0)
+          {
+       	   if(!sssp[i].equals("0"))
+       		   application2=sssp[i];   
+          }
+          else
+          {
+       	   if(!sssp[i].equals("0"))
+       	   application2=application2+"-"+sssp[i];
+          }
+   	}
+   	jdbc.Update("wechatandqq", "bloginformation", "update bloginformation set friendlist='"+(application2)+"' where num='"+Choose+"'");
+
+		System.out.println("好友删除成功");
+		blogsurface();
+	}
+	public static void blogaddmember() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("--------------添加好友---------------");
+		listperson=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		listzs=jdbc.List("wechatandqq", "qqid","where idnumber!='"+listperson.get(0).get("idnumber")+"'");
+		System.out.print("新增好友账号：");
+		Scanner scan=new Scanner(System.in);
+		String newaccountnumber=scan.next();
+		while(newaccountnumber.length()!=10||blogonly(newaccountnumber)||!blogfreshmember(newaccountnumber)||newaccountnumber.equals(listperson.get(0).get("idnumber")))
+		{
+			if(newaccountnumber.length()!=10||blogonly(newaccountnumber))
+			{
+				System.out.println("该账号不存在，请重新输入【0】返回");
+			}
+			else if(!blogfreshmember(newaccountnumber))
+			{
+				System.out.println("该好友已加入，请重新输入【0】返回");
+			}
+			else if(newaccountnumber.equals(listperson.get(0).get("idnumber")))
+			{
+				System.out.println("本人账号无法加好友，请重新输入【0】返回");
+			}
+			newaccountnumber=scan.next();
+			if(newaccountnumber.equals("0"))
+			{
+				blogmembermanage();break;
+			}
+		}
+        System.out.println("-新增好友信息-");
+        listzs=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+newaccountnumber+"'");
+        System.out.println("账号："+newaccountnumber);
+        System.out.println("昵称："+listzs.get(0).get("name"));
+        String blogapplication=listzs.get(0).get("application");
+        if(listzs.get(0).get("application")==null||listzs.get(0).get("application").equals("null"))
+        {
+        	blogapplication=listperson.get(0).get("num");
+        }
+        else
+        {
+        	blogapplication=listzs.get(0).get("application")+"-"+listperson.get(0).get("num");
+        }
+		jdbc.Update("wechatandqq", "bloginformation", "update bloginformation set application='"+(blogapplication)+"' where idnumber='"+newaccountnumber+"'");      
+		System.out.println("好友申请发送中，等待对方接收");
+		blogsurface();	
+	}
+	public static boolean blogonly(String sss) {
+		// TODO Auto-generated method stub
+		ArrayList<Map<String,String>> listp=jdbc.List("wechatandqq", "qqid");
+		listperson=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		boolean go=true;
+		for(int i=0;i<listp.size();i++)
+		{
+			if(sss.equals(listp.get(i).get("idnumber")))
+			{
+                go=false;break;
+			}
+		}
+		return go;
+	}
+	public static void blogopenmemberlist() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("------------打开好友列表-------------");
+		 listperson=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		 ArrayList<Map<String,String>> listzh;
+		 String[] ss;
+		ResultSetMetaData rsmdq=null;
+		ArrayList<Map<String,String>> listmember=null;
+		if(listperson.get(0).get("friendlist")==null||listperson.get(0).get("friendlist").equals("null"))
+		{
+			System.out.println("暂无好友");
+		}
+		else
+		{
+			ss=bloggetmember(listperson.get(0).get("friendlist"));
+			for(int i=0;i<ss.length;i++)
+			
+			{		
+				rsmdq=(ResultSetMetaData) jdbc.getrsmd("wechatandqq", "bloginformation");						
+				listmember=jdbc.List("wechatandqq", "bloginformation","where num='"+ss[i]+"'");
+				for(int ii=1;ii<=rsmdq.getColumnCount()-3;ii++)
+				{ 
+					listzh=jdbc.List("wechatandqq", "translate","where english='"+rsmdq.getColumnName(ii)+"'");
+					System.out.print(listzh.get(0).get("chinese")+":"+listmember.get(0).get(rsmdq.getColumnName(ii))+" ");		
+				}
+				System.out.println();				
+			}
+		}
+		blogsurface();	
+	}
+	public static void bloggroupmanage() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("----------------微博群管理-------------");
+		System.out.println("【1】添加群\t\t【2】打开群列表");
+		System.out.println("【3】创建群聊\t\t【4】查看验证消息");
+		System.out.println("-请选择-");
+		int choose=strongblog(4);
+		switch(choose)
+		{
+		case 1:blogaddgroup();break;
+		case 2:blogopengrouplist();break;
+		case 3:blogbuildgroup();break;
+		case 4:blogcheckgroupinformation();break;
+		}
+	}
+	public static void blogcheckgroupinformation() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("--------------微博查看验证消息-------------");
+ 		 listperson=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+       
+		if(listperson.get(0).get("grouplist")==null||listperson.get(0).get("grouplist").equals("null"))
+		{
+			System.out.println("暂无消息");
+			blogsurface();
+		}
+       else
+       {			
+		  String[] ss;
+		  String[] ddd;
+		  ArrayList<Map<String,String>> listgroup=null;
+		  ss=bloggetmember(listperson.get(0).get("grouplist"));
+		  for(int i=0;i<ss.length;i++)		
+		  {		
+			listgroup=jdbc.List("wechatandqq", "bloggroup","where num='"+ss[i]+"'");
+			ddd=bloggetmember(listgroup.get(0).get("managemember"));
+			for(int j=0;j<ddd.length;j++)
+			{
+				if(ddd[i].equals(listperson.get(0).get("num")))
+				{
+				   if(listgroup.get(0).get("application")==null||listgroup.get(0).get("application").equals("null"))
+					{
+						System.out.println("暂无消息");
+					}
+					else
+					{
+			           System.out.println("-好友申请信息-");
+			     	   ArrayList<Map<String,String>> listmember=null;
+					   String[] sss=bloggetmember(listgroup.get(0).get("application"));
+						for(int iq=0;iq<sss.length;iq++)
+						{		
+							listmember=jdbc.List("wechatandqq", "bloginformation","where num='"+sss[iq]+"'");
+			                System.out.println("编号："+listmember.get(0).get("num"));
+			                System.out.println("账号："+listmember.get(0).get("idnumber"));
+			                System.out.println("昵称："+listmember.get(0).get("name"));
+							System.out.println("是否同意该好友申请【1】同意，【2】拒绝");
+							int choose=strongblog(2);
+							if(choose==1)
+							{
+								
+								String newfriendlist;			 		    		
+								newfriendlist=listgroup.get(0).get("groupmember")+"-"+listmember.get(0).get("num");			    
+						    	jdbc.Update("wechatandqq", "bloggroup", "update bloggroup set groupmember='"+(newfriendlist)+"' where groupid='"+listgroup.get(0).get("groupid")+"'");
+								
+						    	String newfriendlist2=listmember.get(0).get("grouplist");
+						    	if(listmember.get(0).get("grouplist")==null||listmember.get(0).get("grouplist").equals("null"))
+						    	{
+						    		newfriendlist2=listgroup.get(0).get("num");
+						    	}
+						    	else
+								newfriendlist2=listmember.get(0).get("grouplist")+"-"+listgroup.get(0).get("num");
+						    	jdbc.Update("wechatandqq", "bloginformation", "update bloginformation set grouplist='"+(newfriendlist2)+"' where idnumber='"+listmember.get(0).get("idnumber")+"'");                      
+								for(int jj=0;jj<sss.length;jj++)
+								{
+									if(sss[jj].equals(sss[iq]))
+									{
+										sss[iq]="0";break;
+									}
+								}
+								blogrefreshgroupapplication(sss,listgroup.get(0).get("groupid"));
+							}
+							else if(choose==2)
+							{
+								for(int jj=0;jj<sss.length;jj++)
+								{
+									if(sss[jj].equals(sss[iq]))
+									{
+										sss[iq]="0";break;
+									}
+								}
+								blogrefreshgroupapplication(sss,listgroup.get(0).get("groupid"));
+							}
+						}
+					}
+					break;
+				}
+			}
+			System.out.println();				
+		}
+
+		  blogsurface();
+       }	
+	}
+	public static void blogbuildgroup() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("---------------微博创建群聊------------");
+		 listperson=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		System.out.print("请输入群昵称：");
+		Scanner scan=new Scanner(System.in);
+		String groupname=scan.next();
+		Random random=new Random();
+		String accountnumber="354700"+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10));
+		while(!blogonly(accountnumber))
+		{
+			accountnumber="354700"+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10));
+
+		}
+		jdbc.Update("wechatandqq", "bloggroup", "insert into bloggroup(groupid,groupname,groupmember,managemember,owner) values('"+accountnumber+"','"+groupname+"','"+listperson.get(0).get("num")+"','"+listperson.get(0).get("num")+"','"+listperson.get(0).get("num")+"')");		
+       String grouplist=listperson.get(0).get("grouplist");
+       if(listperson.get(0).get("grouplist")==null||listperson.get(0).get("grouplist").equals("null"))
+       {
+       	grouplist=jdbc.List("wechatandqq", "bloggroup","where groupid='"+accountnumber+"'").get(0).get("num");
+       }
+       else
+       {
+       	grouplist=listperson.get(0).get("grouplist")+"-"+jdbc.List("wechatandqq", "bloggroup","where groupid='"+accountnumber+"'").get(0).get("num");
+       }
+		jdbc.Update("wechatandqq", "bloginformation", "update bloginformation set grouplist='"+(grouplist)+"' where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		System.out.println("创建成功，群账号为："+accountnumber);
+		blogsurface();
+	}
+	public static void blogopengrouplist() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("---------------微博群列表--------------");
+		listperson=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		if(listperson.get(0).get("grouplist")==null||listperson.get(0).get("grouplist").equals("null"))
+		{
+			System.out.println("尚未加群");
+			blogsurface();
+		}
+		else
+		{
+			System.out.println("-请选择-");
+			ArrayList<Map<String,String>> listzh;
+			String[] ss;
+			ResultSetMetaData rsmdq=null;
+			ArrayList<Map<String,String>> listgroup=null;
+			ss=bloggetmember(listperson.get(0).get("grouplist"));
+			for(int i=0;i<ss.length;i++)		
+			{		
+				rsmdq=(ResultSetMetaData) jdbc.getrsmd("wechatandqq", "bloggroup");						
+				listgroup=jdbc.List("wechatandqq", "bloggroup","where num='"+ss[i]+"'");
+				for(int ii=1;ii<=3;ii++)
+				{ 
+					listzh=jdbc.List("wechatandqq", "translate","where english='"+rsmdq.getColumnName(ii)+"'");
+					System.out.print(listzh.get(0).get("chinese")+":"+listgroup.get(0).get(rsmdq.getColumnName(ii))+" ");		
+				}
+				System.out.println();				
+			}
+	
+			ArrayList<Map<String,String>> listg=null;
+			String[] sss=bloggetmember(listperson.get(0).get("grouplist"));
+			int choose=strongblog(10000);
+			String Choose=String.valueOf(choose);
+			boolean go=false;
+			while(!go)
+			{
+	             for(int i=0;i<sss.length;i++)
+	             {
+	            	 if(Choose.equals(sss[i]))
+	            	 {
+	            		 go=true;break;
+	            		
+	            	 }
+	             }
+	             if(go==false)
+	             {
+	            	 System.out.println("编号输入有误，请重新输入");
+	            	 choose=strongblog(10000);
+	         		 Choose=String.valueOf(choose);
+	             }
+			}
+			System.out.println("编号输入正确");
+			listg=jdbc.List("wechatandqq", "bloggroup","where num='"+Choose+"'");
+			System.out.println("【1】查询群成员\t\t【2】退出群");
+			System.out.println("【3】建立讨论组\t\t【4】管理员设置");
+			int choosetwo=strongblog(4);
+			switch(choosetwo)
+			{
+			case 1:bloggroupmemberlist(listg);break;
+			case 2:blogexitgroup(listg);break;
+			case 3:blogbuildsmallgroup(listg);break;
+			case 4:blogsetmanager(listg);break;
+			}
+		}	
+	}
+	public static void blogsetmanager(ArrayList<Map<String, String>> listg) throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("--------------微博管理员设置-------------");
+		listperson=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		if(!listg.get(0).get("owner").equals(listperson.get(0).get("num")))
+		{
+			System.out.println("非群主无法行使此功能");
+		}
+		else
+		{
+		System.out.println("-管理员-");
+		String ownernum=jdbc.List("wechatandqq", "bloginformation","where num='"+listg.get(0).get("owner")+"'").get(0).get("num");
+		String[] ss;
+		ArrayList<Map<String,String>> listmember=null;
+		ss=bloggetmember(listg.get(0).get("managemember"));
+		int get=0;
+		for(int i=0;i<ss.length;i++)		
+		{		
+			if(!ss[i].equals(ownernum))
+			{
+				listmember=jdbc.List("wechatandqq", "bloginformation","where num='"+ss[i]+"'");
+				System.out.print("编号："+listmember.get(0).get("num")+" ");
+				System.out.print("账号："+listmember.get(0).get("idnumber")+" ");
+				System.out.println("昵称："+listmember.get(0).get("name"));
+				System.out.println();
+				get=1;
+			}
+		}
+		if(get==0)
+		{
+			System.out.println("群主未设置管理员");
+		}
+		System.out.println("-非管理员-");
+		String[] ssf;
+		ssf=bloggetmember(listg.get(0).get("groupmember"));
+		int get3=0;
+		int get2=0;
+		for(int i=0;i<ssf.length;i++)		
+		{		
+			for(int ii=0;ii<ss.length;ii++)
+			{
+				if(ss[ii].equals(ssf[i]))
+				{
+					get2=1;break;
+				}
+			}
+			if(get2==0)
+			{
+				ResultSetMetaData rsmdq=(ResultSetMetaData) jdbc.getrsmd("wechatandqq", "bloginformation");						
+				listmember=jdbc.List("wechatandqq", "bloginformation","where num='"+ssf[i]+"'");
+				System.out.print("编号："+listmember.get(0).get("num")+" ");
+				System.out.print("账号："+listmember.get(0).get("idnumber")+" ");
+				System.out.println("昵称："+listmember.get(0).get("name"));
+				System.out.println();
+				get3=1;
+			}
+			get2=0;
+		}
+		if(get3==0)
+		{
+			System.out.println("暂无非管理员成员");
+		}
+		System.out.println("【1】设置管理员，【2】取消管理员");
+		int choose=strongblog(2);
+		if(choose==1)
+		{
+			if(get3==0)
+			{
+				System.out.println("暂无非管理员成员");
+				blogsurface();
+			}
+			else
+			{
+				
+				String[] sss=bloggetmember(listg.get(0).get("managemember"));
+				System.out.println("请输入需设置管理员的编号");
+				int choose2=strongblog(10000);
+				String Choose=String.valueOf(choose2);
+				boolean go=false;
+				int b=1;
+				while(!go)
+				{
+		             for(int i=0;i<ssf.length;i++)
+		             {
+		            	 
+		            	 if(Choose.equals(ssf[i]))
+		            	 {
+				         		for(int ii=0;ii<sss.length;ii++)		
+				        		{		
+		                              if(sss[ii].equals(Choose))
+		                              {
+		                            	  b=0;break;
+		                              }
+				        		}
+				         		if(b==0)
+				         		{
+				         			go=false;break;
+				         		}
+				         		else
+				         		{
+				         			go=true;break;
+				         		}
+		            		
+		            	 }
+		             }
+		             if(go==false)
+		             {
+		            	 System.out.println("编号输入有误，请重新输入");
+		            	 choose=strongblog(10000);
+		         		 Choose=String.valueOf(choose);
+		             }
+				}
+				System.out.println("编号输入正确");
+				String application=listg.get(0).get("managemember")+"-"+Choose;
+		    	jdbc.Update("wechatandqq", "bloggroup", "update bloggroup set managemember='"+(application)+"' where groupid='"+listg.get(0).get("groupid")+"'");
+		    
+			}
+		}
+		else if(choose==2)
+		{
+			if(get==0)
+			{
+				System.out.println("暂无管理员");
+				blogsurface();
+			}
+			else
+			{
+				System.out.println("请输入需取消管理员的编号");
+				String[] sss=bloggetmember(listg.get(0).get("managemember"));
+				 int choose3=strongblog(10000);
+				String Choose=String.valueOf(choose3);
+				boolean go=false;
+				while(!go)
+				{
+		             for(int i=0;i<sss.length;i++)
+		             {
+		            	 if(Choose.equals(sss[i])&&!(Choose.equals(listperson.get(0).get("num"))))
+		            	 {
+		            		 go=true;break;
+		            		
+		            	 }
+		             }
+		             if(go==false)
+		             {
+		            	 System.out.println("编号输入有误，请重新输入");
+		            	 choose=strongblog(10000);
+		         		 Choose=String.valueOf(choose);
+		             }
+				}
+				System.out.println("编号输入正确");
+				for(int j=0;j<sss.length;j++)
+					{
+						if(sss[j].equals(Choose))
+						{
+							sss[j]="0";break;
+						}
+					}
+		    	String application="null";
+		    	for(int i=0;i<sss.length;i++)
+		    	{
+		           if(i==0)
+		           {
+		        	   if(!sss[i].equals("0"))
+		        		   application=sss[i];   
+		           }
+		           else
+		           {
+		        	   if(!sss[i].equals("0"))
+		        	   {
+		        		   if(application.equals("null"))
+		        		   {
+		                	   application=sss[i];
+		        		   }
+		        		   else
+		        		   {
+		                	   application=application+"-"+sss[i];
+		        		   }
+		        	   }
+		           }
+		    	}
+		    	jdbc.Update("wechatandqq", "bloggroup", "update bloggroup set managemember='"+(application)+"' where groupid='"+listg.get(0).get("groupid")+"'");
+			}
+		}
+		blogsurface();	
+		}	
+	}
+	public static void blogbuildsmallgroup(ArrayList<Map<String, String>> listg) throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("-------------微博建立讨论组------------");
+		System.out.println("-----------尚未更新，敬请期待---------");
+
+		blogsurface();
+	}
+	public static void blogexitgroup(ArrayList<Map<String, String>> listg) throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("--------------微博退出群聊-------------");
+		listperson=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		String[] sss;
+		String[] pp;
+		if(listg.get(0).get("owner").equals(listperson.get(0).get("num")))
+		{
+	    	jdbc.Update("wechatandqq", "bloggroup", "delete from bloggroup where groupid ='"+listg.get(0).get("groupid")+"'");
+			pp=bloggetmember(listg.get(0).get("groupmember"));
+             for(int i=0;i<pp.length;i++)
+             {
+            	 
+            	 listzs=jdbc.List("wechatandqq", "bloginformation","where num='"+pp[i]+"'");
+         		sss=bloggetmember(listzs.get(0).get("grouplist"));
+        		for(int j=0;j<sss.length;j++)
+        		{
+        			if(sss[j].equals(listg.get(0).get("num")))
+        			{
+        				sss[j]="0";break;
+        			}
+        		}
+            String application="null";
+        	for(int ii=0;ii<sss.length;ii++)
+        	{
+               if(ii==0)
+               {
+            	   if(!sss[ii].equals("0"))
+            		   application=sss[ii];   
+               }
+               else
+               {
+            	   if(!sss[ii].equals("0"))
+            	   {
+            		   if(application.equals("null"))
+            		   {
+                    	   application=sss[ii];
+            		   }
+            		   else
+            		   {
+                    	   application=application+"-"+sss[ii];
+            		   }
+            	   }
+               }
+        	}
+        	jdbc.Update("wechatandqq", "bloginformation", "update bloginformation set grouplist='"+(application)+"' where idnumber='"+listzs.get(0).get("idnumber")+"'");
+            	 
+             }
+	    	System.out.println("由于您是群主，该群已解散");
+		}
+		else
+		{
+			sss=bloggetmember(listg.get(0).get("groupmember"));
+			for(int j=0;j<sss.length;j++)
+			{
+				if(sss[j].equals(listperson.get(0).get("num")))
+				{
+					sss[j]="0";break;
+				}
+			}
+    	String application="null";
+    	for(int i=0;i<sss.length;i++)
+    	{
+           if(i==0)
+           {
+        	   if(!sss[i].equals("0"))
+        		   application=sss[i];   
+           }
+           else
+           {
+        	   if(!sss[i].equals("0"))
+        	   {
+        		   if(application.equals("null"))
+        		   {
+                	   application=sss[i];
+        		   }
+        		   else
+        		   {
+                	   application=application+"-"+sss[i];
+        		   }
+        	   }
+           }
+    	}
+    	jdbc.Update("wechatandqq", "bloggroup", "update bloggroup set groupmember='"+(application)+"' where groupid='"+listg.get(0).get("groupid")+"'");
+		sss=bloggetmember(listperson.get(0).get("grouplist"));
+		for(int j=0;j<sss.length;j++)
+		{
+			if(sss[j].equals(listg.get(0).get("num")))
+			{
+				sss[j]="0";break;
+			}
+		}
+     application="null";
+	for(int i=0;i<sss.length;i++)
+	{
+       if(i==0)
+       {
+    	   if(!sss[i].equals("0"))
+    		   application=sss[i];   
+       }
+       else
+       {
+    	   if(!sss[i].equals("0"))
+    	   {
+    		   if(application.equals("null"))
+    		   {
+            	   application=sss[i];
+    		   }
+    		   else
+    		   {
+            	   application=application+"-"+sss[i];
+    		   }
+    	   }
+       }
+	}
+	jdbc.Update("wechatandqq", "bloginformation", "update bloginformation set grouplist='"+(application)+"' where idnumber='"+listperson.get(0).get("idnumber")+"'");
+    
+		String[] ss=bloggetmember(listg.get(0).get("managemember"));
+		int a=0;
+        for(int i=0;i<ss.length;i++)
+        {
+        	if(ss[i].equals(listperson.get(0).get("num")))
+        	{
+        		a=1;break;
+        	}
+        }
+        if(a==1)
+        {
+        	sss=bloggetmember(listg.get(0).get("managemember"));
+			for(int j=0;j<sss.length;j++)
+			{
+				if(sss[j].equals(listperson.get(0).get("num")))
+				{
+					sss[j]="0";break;
+				}
+			}
+         application="null";
+    	for(int i=0;i<sss.length;i++)
+    	{
+           if(i==0)
+           {
+        	   if(!sss[i].equals("0"))
+        		   application=sss[i];   
+           }
+           else
+           {
+        	   if(!sss[i].equals("0"))
+        	   {
+        		   if(application.equals("null"))
+        		   {
+                	   application=sss[i];
+        		   }
+        		   else
+        		   {
+                	   application=application+"-"+sss[i];
+        		   }
+        	   }
+           }
+    	}
+    	jdbc.Update("wechatandqq", "bloggroup", "update bloggroup set managemember='"+(application)+"' where groupid='"+listg.get(0).get("groupid")+"'");
+        
+        }
+		}      
+		blogsurface();	
+	}
+	public static void bloggroupmemberlist(ArrayList<Map<String, String>> listg) throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("-------------微博查看群成员------------");
+		listperson=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		String ownername=jdbc.List("wechatandqq", "bloginformation","where num='"+listg.get(0).get("owner")+"'").get(0).get("name");
+		String ownernumber=jdbc.List("wechatandqq", "bloginformation","where num='"+listg.get(0).get("owner")+"'").get(0).get("idnumber");
+		String ownernum=jdbc.List("wechatandqq", "bloginformation","where num='"+listg.get(0).get("owner")+"'").get(0).get("num");
+		System.out.println("-群主-");
+		System.out.print("账号："+ownernumber+" ");
+		System.out.println("昵称："+ownername);
+		System.out.println("-管理员-");
+	    ArrayList<Map<String,String>> listzh;
+		String[] ss;
+		ResultSetMetaData rsmdq=null;
+		ArrayList<Map<String,String>> listmember=null;
+		ss=bloggetmember(listg.get(0).get("managemember"));
+		int get=0;
+		for(int i=0;i<ss.length;i++)		
+		{		
+			if(!ss[i].equals(ownernum))
+			{
+				listmember=jdbc.List("wechatandqq", "bloginformation","where num='"+ss[i]+"'");
+				System.out.print("账号："+listmember.get(0).get("idnumber")+" ");
+				System.out.println("昵称："+listmember.get(0).get("name"));
+				System.out.println();
+				get=1;
+			}
+		}
+		if(get==0)
+		{
+			System.out.println("群主未设置管理员");
+		}
+		ss=bloggetmember(listg.get(0).get("groupmember"));
+		System.out.println("-群成员-");
+		for(int i=0;i<ss.length;i++)		
+			{		
+				rsmdq=(ResultSetMetaData) jdbc.getrsmd("wechatandqq", "bloginformation");						
+				listmember=jdbc.List("wechatandqq", "bloginformation","where num='"+ss[i]+"'");
+				for(int ii=1;ii<=rsmdq.getColumnCount()-3;ii++)
+				{ 
+					listzh=jdbc.List("wechatandqq", "translate","where english='"+rsmdq.getColumnName(ii)+"'");
+					System.out.print(listzh.get(0).get("chinese")+":"+listmember.get(0).get(rsmdq.getColumnName(ii))+" ");		
+				}
+				System.out.println();				
+			}
+		blogsurface();	
+	}
+	public static void blogaddgroup() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("---------------微博添加群--------------");
+		listperson=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		listzs=jdbc.List("wechatandqq", "qqid","where idnumber!='"+listperson.get(0).get("idnumber")+"'");
+		System.out.print("新增群账号：");
+		Scanner scan=new Scanner(System.in);
+		String newaccountnumber=scan.next();
+		while(newaccountnumber.length()!=10||blogonlygroup(newaccountnumber)||!blogfreshgroup(newaccountnumber))
+		{
+			if(newaccountnumber.length()!=10||blogonlygroup(newaccountnumber))
+			{
+				System.out.println("该账号不存在，请重新输入【0】返回");
+			}
+			else if(!blogfreshgroup(newaccountnumber))
+			{
+				System.out.println("该群已加入，请重新输入【0】返回");
+			}
+			newaccountnumber=scan.next();
+			if(newaccountnumber.equals("0"))
+			{
+				blogmembermanage();break;
+			}
+		}
+        System.out.println("-新增群信息-");
+        listzs=jdbc.List("wechatandqq", "bloggroup","where groupid='"+newaccountnumber+"'");
+        System.out.println("账号："+newaccountnumber);
+        System.out.println("昵称："+listzs.get(0).get("groupname"));
+        String blogapplication=listzs.get(0).get("application");
+        if(listzs.get(0).get("application")==null||listzs.get(0).get("application").equals("null"))
+        {
+        	blogapplication=listperson.get(0).get("num");
+        }
+        else
+        {
+        	blogapplication=listzs.get(0).get("application")+"-"+listperson.get(0).get("num");
+        }
+		jdbc.Update("wechatandqq", "bloggroup", "update bloggroup set application='"+(blogapplication)+"' where groupid='"+newaccountnumber+"'");      
+		System.out.println("加群申请发送中，等待管理员确认接收");
+		blogsurface();
+	}
+	public static boolean blogonlygroup(String sss) {
+		// TODO Auto-generated method stub
+		ArrayList<Map<String,String>> listp=jdbc.List("wechatandqq", "bloggroup");
+		listperson=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		boolean go=true;
+		for(int i=0;i<listp.size();i++)
+		{
+			if(sss.equals(listp.get(i).get("groupid")))
+			{
+                go=false;break;
+			}
+		}
+		return go;
+	}
+	public static void bloglogon() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("----------------微博登录---------------");
+		Scanner scan=new Scanner(System.in);
+		  String accountnumber,password;
+		  System.out.print("QQ账号:");
+		  accountnumber=scan.next();
+		  while((accountnumber.length()!=10)||!number(accountnumber))
+			 {
+				System.out.println("输入有误，请重新输入");
+				accountnumber=scan.next();
+			 }
+		  listzs=jdbc.List("wechatandqq", "qqid","where idnumber='"+accountnumber+"'");
+		  if(listzs.size()==0)
+		  {
+   		      System.out.println("没有该用户数据,返回主界面");
+			  mainsurface();
+		  }
+		  else if(listzs.get(0).get("weblog").equals("0"))
+		  {
+			  System.out.println("该账户未开通微博,返回主界面");
+			  mainsurface();
+		  }
+		  else
+		  {
+				System.out.print("密码:");
+				password=scan.next();
+		    	   while(!password.equals(listzs.get(0).get("password")))
+		    	   {
+		    		   System.out.println("密码输入错误!");
+		    		   System.out.print("密码:");
+		    		   password=scan.next();
+		    	   }		  
+		    		 System.out.println("登录成功！");
+		    		 listperson=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+accountnumber+"'");
+		    		 blogsurface();
+		  }	
+	}
+	public static int strongblog(int n) throws SQLException////控制用户选择功能的输入格式
+	{
+		boolean go=false;
+		int num=0;
+		Scanner scan=new Scanner(System.in);
+		String ss=scan.next();
+		while(!go)
+		{
+			while(!number(ss))//使在用户输入错误之后给用户提示信息
+			{
+				System.out.println("输入有误，请重新输入");
+				ss=scan.next();
+			}	
+			 num=Integer.valueOf(ss);
+			 if(num==0)
+			 {
+				 blogsurface();break;
+			 }
+			 for(int i=1;i<=n;i++)
+			{
+				if(num==i)
+				{
+					go=true;break;
+				}
+			}
+			 if(go==false)
+			 {
+					System.out.println("输入有误，请重新输入");
+					ss=scan.next();
+			 }
+		}
+		return num;
+		
+	}
+    public static boolean blogfreshmember(String sss)
+    {
+		listperson=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		boolean go=true;
+		ArrayList<Map<String,String>> listmember=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+sss+"'");
+		if(listperson.get(0).get("friendlist")==null||listperson.get(0).get("friendlist").equals("null"))
+		{
+			
+		}
+		else
+		{   ;
+			String[] ss=bloggetmember(listperson.get(0).get("friendlist"));
+			for(int i=0;i<ss.length;i++)
+			{
+				if(ss[i].equals(listmember.get(0).get("num")))
+				{
+	                go=false;break;
+				}
+			}
+		}
+
+		return go;
+    }
+    public static boolean blogfreshgroup(String sss)
+    {
+		listperson=jdbc.List("wechatandqq", "bloginformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		boolean go=true;
+		ArrayList<Map<String,String>> listgroup=jdbc.List("wechatandqq", "bloggroup","where groupid='"+sss+"'");
+		if(listperson.get(0).get("grouplist")==null||listperson.get(0).get("grouplist").equals("null"))
+		{
+			
+		}
+		else
+		{   ;
+			String[] ss=bloggetmember(listperson.get(0).get("grouplist"));
+			for(int i=0;i<ss.length;i++)
+			{
+				if(ss[i].equals(listgroup.get(0).get("num")))
+				{
+	                go=false;break;
+				}
+			}
+		}
+
+		return go;
+    }
+	public static String[] bloggetmember(String ss) {
+		// TODO Auto-generated method stub
+		String[] s=ss.split("-");
+		return s;
+	}
+    //---------------------微博类结束-----------------------
+    //---------------------微信类开始-----------------------
+	
+    public static void wechatlogon() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("----------------微信登录---------------");
+		System.out.println("【1】微信账号登录        【2】QQ账号登录");
+		int choose=strongall(2);
+		switch(choose)
+		{
+		case 1:wechatlogonw();break;
+		case 2:wechatlogonq();break;
+		}
+
+    }
+	public static void wechatlogonw() throws SQLException {
+		// TODO Auto-generated method stub
+		Scanner scan=new Scanner(System.in);
+		  String accountnumber,password;
+		  System.out.print("微信账号:");
+		  accountnumber=scan.next();
+		  while((accountnumber.length()!=10)||!number(accountnumber))
+			 {
+				System.out.println("输入有误，请重新输入");
+				accountnumber=scan.next();
+			 }
+		  listzs=jdbc.List("wechatandqq", "wechatid","where idnumber='"+accountnumber+"'");
+		  if(listzs.size()==0)
+		  {
+ 		      System.out.println("没有该用户数据,返回主界面");
+			  mainsurface();
+		  }
+		  else
+		  {
+				System.out.print("密码:");
+				password=scan.next();
+		    	   while(!password.equals(listzs.get(0).get("password")))
+		    	   {
+		    		   System.out.println("密码输入错误!");
+		    		   System.out.print("密码:");
+		    		   password=scan.next();
+		    	   }		  
+		    		 System.out.println("登录成功！");
+		    		 listperson=jdbc.List("wechatandqq", "wechatinformation","where idnumber='"+accountnumber+"'");
+		    		 wechatsurface();
+		  }	
+	}
+	public static void wechatlogonq() throws SQLException {
+		// TODO Auto-generated method stub
+		Scanner scan=new Scanner(System.in);
+		  String accountnumber,password;
+		  System.out.print("QQ账号:");
+		  accountnumber=scan.next();
+		  while((accountnumber.length()!=10)||!number(accountnumber))
+			 {
+				System.out.println("输入有误，请重新输入");
+				accountnumber=scan.next();
+			 }
+		  listzs=jdbc.List("wechatandqq", "qqid","where idnumber='"+accountnumber+"'");
+		  if(listzs.size()==0)
+		  {
+   		      System.out.println("没有该用户数据,返回主界面");
+			  mainsurface();
+		  }
+		  else
+		  {
+				System.out.print("密码:");
+				password=scan.next();
+		    	   while(!password.equals(listzs.get(0).get("password")))
+		    	   {
+		    		   System.out.println("密码输入错误!");
+		    		   System.out.print("密码:");
+		    		   password=scan.next();
+		    	   }		  
+		    		 System.out.println("登录成功！");
+		    		 String s=jdbc.List("wechatandqq", "wechatid","where qq='"+accountnumber+"'").get(0).get("idnumber");
+		    		 listperson=jdbc.List("wechatandqq", "wechatid","where idnumber='"+s+"'");
+		    		 wechatsurface();
+		  }
+	}
+	public static void wechatregister() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("----------------微信注册---------------");
+		System.out.print("请输入密码：");
+		Scanner scan=new Scanner(System.in);
+		String password=scan.next();
+		while(password.length()<6)
+		{
+			System.out.println("密码长度太短，请重新输入密码");
+			password=scan.next();
+		}
+		System.out.print("请确认密码：");
+		String passwordtwo=scan.next();
+		while(!passwordtwo.equals(password))
+		{
+			System.out.println("密码输入不一致，请重新输入");
+			passwordtwo=scan.next();
+		}
+		System.out.print("请输入昵称：");
+		String name=scan.next();
+		System.out.print("请输入出生时间：");
+		String birthdata=scan.next();
+		Date d=new Date();
+		SimpleDateFormat sdf=new SimpleDateFormat("y年M月d日h时：m分：s秒");
+		String data=sdf.format(d);
+		System.out.print("请输入所在地：");
+		String position=scan.next();
+		Random random=new Random();
+		String accountnumber="182960"+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10));
+		while(!wechatonly(accountnumber))
+		{
+			accountnumber="182960"+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10));
+
+		}
+		jdbc.Update("wechatandqq", "wechatid", "insert into wechatid(idnumber,password) values('"+accountnumber+"',"+"'"+password+"')");
+		jdbc.Update("wechatandqq", "wechatinformation", "insert into wechatinformation(idnumber,name,birthdata,tage,position) values('"+accountnumber+"','"+name+"','"+birthdata+"','"+data+"','"+position+"')");
+		listperson=jdbc.List("wechatandqq", "wechatid", "where idnumber='"+accountnumber+"'" );
+		System.out.println("注册成功，账号为"+accountnumber);
+		System.out.println("是否绑定QQ【1】是，【2】否");
+		int choose=strongall(2);
+		switch(choose)
+		{
+		case 1:wechatbind();break;
+		case 2:wechatsurface();break;
+		}
+	}
+	public static void wechatbind() throws SQLException {
+		System.out.println("----------------绑定QQ---------------");
+		Scanner scan=new Scanner(System.in);
+		  String accountnumber,password;
+		  System.out.print("QQ账号:");
+		  accountnumber=scan.next();
+		  while((accountnumber.length()!=10)||!number(accountnumber))
+			 {
+				System.out.println("输入有误，请重新输入");
+				accountnumber=scan.next();
+			 }
+		  listzs=jdbc.List("wechatandqq", "qqid","where idnumber='"+accountnumber+"'");
+		  if(listzs.size()==0)
+		  {
+   		      System.out.println("没有该用户数据,返回主界面");
+			  mainsurface();
+		  }
+		  listzs=jdbc.List("wechatandqq", "wechatid","where qq='"+accountnumber+"'");
+		  if(listzs.size()!=0)
+		  {
+			  System.out.println("该QQ号已绑定用户，请重新输入");
+			  accountnumber=scan.next();
+		  }
+		  else
+		  {
+				System.out.print("密码:");
+				password=scan.next();
+				listzs=jdbc.List("wechatandqq", "qqid","where idnumber='"+accountnumber+"'");
+		    	   while(!password.equals(listzs.get(0).get("password")))
+		    	   {
+		    		   System.out.println("密码输入错误!");
+		    		   System.out.print("密码:");
+		    		   password=scan.next();
+		    	   }		  
+		    		 System.out.println("绑定成功！");
+		    		 jdbc.Update("wechatandqq", "wechatid","update wechatid set qq='"+accountnumber+"'"+" where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		    		 listperson=jdbc.List("wechatandqq", "wechatinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		    		 wechatsurface();
+		  }	
+	}
+	public static void wechatsurface() throws SQLException
+	{                      
+		System.out.println("【1】微信群管理\t\t【2】好友管理");
+		System.out.println("【3】返回主界面");
+		System.out.println("-请选择-");
+		int choose=strongwechat(3);
+		switch(choose)
+		{
+		case 1:wechatgroupmanage();break;
+		case 2:wechatmembermanage();break;
+		case 3:mainsurface();break;
+		}
+	}
+	public static void wechatmembermanage() throws SQLException {
+		System.out.println("---------------微信好友管理--------------");
+		System.out.println("【1】好友列表\t\t【2】添加好友");
+		System.out.println("【3】删除好友\t\t【4】查看验证消息  ");
+		System.out.println("【5】查看和QQ的共同好友");
+		System.out.println("-请选择-"); 
+		int choose=strongwechat(5);
+		switch(choose)
+		{
+		case 1:wechatopenmemberlist();break;
+		case 2:wechataddmember();break;
+		case 3:wechatdeletemember();break;
+		case 4:wechatheckmemberinformation();break;
+		case 5:wechatinquiremember();break;
+		}		
+	}
+
+		// TODO Auto-generated method stub
+		public static void wechatinquiremember() throws SQLException {
+			System.out.println("---------查询和QQ的共同好友---------");
+			 listperson=jdbc.List("wechatandqq", "wechatinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		  //微信的好友
+			listzs=jdbc.List("wechatandqq", "qqid","where qq='"+listperson.get(0).get("idnumber")+"'");
+			int get=0;
+			if(listperson.get(0).get("qq")==null||listperson.get(0).get("qq").equals("null"))
+			{
+				System.out.println("该账号未绑定QQ，无法查询");
+			}
+			else
+			{
+				 ArrayList<Map<String,String>> listw;
+				 String[] ss;
+				if(listzs.get(0).get("friendlist")==null||listperson.get(0).get("friendlist")==null||listperson.get(0).get("friendlist").equals("null")||listzs.get(0).get("friendlist").equals("null"))
+				{
+					System.out.println("无共同好友");
+				}
+				else
+				{
+					ss=wechatgetmember(listzs.get(0).get("friendlist"));
+					for(int i=0;i<ss.length;i++)				
+					{
+						listw=jdbc.List("wechatandqq", "wechatid","where num='"+ss[i]+"'");
+						String id;
+					    if(listw.get(0).get("qq")==null||listw.get(0).get("qq").equals("null"))
+					    {
+					    	id="00";
+					    }
+					    else
+					    {
+					    	id=listw.get(0).get("qq");
+					    }
+					     String[] ssq=qqgetmember(listzs.get(0).get("friendlist"));
+					     for(int j=0;j<ssq.length;j++)
+					     {
+					    	 String qq=jdbc.List("wechatandqq", "qqinformation","where num='"+ssq[j]+"'").get(0).get("idnumber");
+					    	 if(qq.equals(id))
+					    	 {
+					    		 System.out.print("QQ:"+jdbc.List("wechatandqq", "qqinformation","where num='"+ssq[j]+"'").get(0).get("idnumber")+" ");
+					    		 System.out.println("昵称:"+jdbc.List("wechatandqq", "qqinformation","where num='"+ssq[j]+"'").get(0).get("idnumber")+" ");
+					    	     System.out.println("微信:"+listw.get(0).get("idnumber")+" 昵称:"+listw.get(0).get("name"));
+					    	     System.out.println();
+					    	     get=1;break;
+					    	 }
+					     }
+					}
+				}
+			}
+			if(get==0)
+			{
+				System.out.println("无共同好友");
+			}
+			wechatsurface();
+		}
+	public static void wechatheckmemberinformation() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("--------------微博查看验证消息-------------");
+		 listperson=jdbc.List("wechatandqq", "wechatinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		if(listperson.get(0).get("application")==null||listperson.get(0).get("application").equals("null"))
+		{
+			System.out.println("暂无消息");
+		}
+		else
+		{
+       System.out.println("-好友申请信息-");
+    	ArrayList<Map<String,String>> listmember=null;
+		String[] sss=wechatgetmember(listperson.get(0).get("application"));
+			for(int i=0;i<sss.length;i++)
+			{		
+				listmember=jdbc.List("wechatandqq", "wechatinformation","where num='"+sss[i]+"'");
+               System.out.println("编号："+listmember.get(0).get("num"));
+               System.out.println("账号："+listmember.get(0).get("idnumber"));
+               System.out.println("昵称："+listmember.get(0).get("name"));
+				System.out.println("是否同意该好友申请【1】同意，【2】拒绝");
+				int choose=strongwechat(2);
+				if(choose==1)
+				{
+					//处理自己这边的数据库
+					String newfriendlist;
+			    	if(listperson.get(0).get("friendlist")==null||listperson.get(0).get("friendlist").equals("null"))
+			    	{
+			    		newfriendlist=listmember.get(0).get("num");
+			    	}
+			    	else			 		    		
+					newfriendlist=listperson.get(0).get("friendlist")+"-"+listmember.get(0).get("num");			    
+			    	jdbc.Update("wechatandqq", "wechatinformation", "update wechatinformation set friendlist='"+(newfriendlist)+"' where idnumber='"+listperson.get(0).get("idnumber")+"'");
+					
+			    	String newfriendlist2=listmember.get(0).get("friendlist");
+			    	if(listmember.get(0).get("friendlist")==null||listmember.get(0).get("friendlist").equals("null"))
+			    	{
+			    		newfriendlist2=sss[i];
+			    	}
+			    	else
+					newfriendlist2=listmember.get(0).get("friendlist")+"-"+listperson.get(0).get("num");
+			    	jdbc.Update("wechatandqq", "wechatinformation", "update wechatinformation set friendlist='"+(newfriendlist2)+"' where idnumber='"+listmember.get(0).get("idnumber")+"'");                      
+					for(int j=0;j<sss.length;j++)
+					{
+						if(sss[j].equals(sss[i]))
+						{
+							sss[i]="0";break;
+						}
+					}
+					wechatrefreshmemberapplication(sss);
+				}
+				else if(choose==2)
+				{
+					for(int j=0;j<sss.length;j++)
+					{
+						if(sss[j].equals(sss[i]))
+						{
+							sss[i]="0";break;
+						}
+					}
+					wechatrefreshmemberapplication(sss);
+				}
+			}
+		}
+
+		wechatsurface();	
+	}
+	public static void wechatrefreshmemberapplication(String[] sss) {
+		// TODO Auto-generated method stub
+    	String application="null";
+    	for(int i=0;i<sss.length;i++)
+    	{
+           if(i==0)
+           {
+        	   if(!sss[i].equals("0"))
+        		   application=sss[i];   
+           }
+           else
+           {
+        	   if(!sss[i].equals("0"))
+        	   application=application+"-"+sss[i];
+           }
+    	}
+    	jdbc.Update("wechatandqq", "wechatinformation", "update wechatinformation set application='"+(application)+"' where idnumber='"+listperson.get(0).get("idnumber")+"'");
+   	
+	}
+	public static void wechatrefreshgroupapplication(String[] sss) {
+		// TODO Auto-generated method stub
+    	String application="null";
+    	for(int i=0;i<sss.length;i++)
+    	{
+           if(i==0)
+           {
+        	   if(!sss[i].equals("0"))
+        		   application=sss[i];   
+           }
+           else
+           {
+        	   if(!sss[i].equals("0"))
+        	   application=application+"-"+sss[i];
+           }
+    	}
+    	jdbc.Update("wechatandqq", "wechatinformation", "update wechatinformation set groupapplication='"+(application)+"' where idnumber='"+listperson.get(0).get("idnumber")+"'");
+   	
+	}
+	public static void wechatdeletemember() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("--------------删除好友---------------");
+		 listperson=jdbc.List("wechatandqq", "wechatinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		ArrayList<Map<String,String>> listzh;
+		ResultSetMetaData rsmdq=null;
+		ArrayList<Map<String,String>> listmember=null;
+		if(listperson.get(0).get("friendlist")==null||listperson.get(0).get("friendlist").equals("null"))
+		{
+			System.out.println("暂无好友");
+		}
+		else
+		{
+			String[] sss=wechatgetmember(listperson.get(0).get("friendlist"));
+			for(int i=0;i<sss.length;i++)
+			
+			{		
+				rsmdq=(ResultSetMetaData) jdbc.getrsmd("wechatandqq", "wechatinformation");						
+				listmember=jdbc.List("wechatandqq", "wechatinformation","where num='"+sss[i]+"'");
+				for(int ii=1;ii<=rsmdq.getColumnCount()-3;ii++)
+				{ 
+					listzh=jdbc.List("wechatandqq", "translate","where english='"+rsmdq.getColumnName(ii)+"'");
+					System.out.print(listzh.get(0).get("chinese")+":"+listmember.get(0).get(rsmdq.getColumnName(ii))+" ");		
+				}
+				System.out.println();				
+			}
+		}
+		System.out.println("-请选择好友编号-");
+		String[] sss=wechatgetmember(listperson.get(0).get("friendlist"));
+		int choose=strongwechat(10000);
+		String Choose=String.valueOf(choose);
+		boolean go=false;
+		while(!go)
+		{
+            for(int i=0;i<sss.length;i++)
+            {
+           	 if(Choose.equals(sss[i]))
+           	 {
+           		 go=true;break;
+           		
+           	 }
+            }
+            if(go==false)
+            {
+           	 System.out.println("编号输入有误，请重新输入");
+           	 choose=strongwechat(10000);
+        		 Choose=String.valueOf(choose);
+            }
+		}
+		System.out.println("编号输入正确");
+		for(int j=0;j<sss.length;j++)
+			{
+				if(sss[j].equals(Choose))
+				{
+					sss[j]="0";break;
+				}
+			}
+   	String application="null";
+   	for(int i=0;i<sss.length;i++)
+   	{
+          if(i==0)
+          {
+       	   if(!sss[i].equals("0"))
+       		   application=sss[i];   
+          }
+          else
+          {
+       	   if(!sss[i].equals("0"))
+       	   {
+       		   if(application.equals("null"))
+       		   {
+               	   application=sss[i];
+       		   }
+       		   else
+       		   {
+               	   application=application+"-"+sss[i];
+       		   }
+       	   }
+          }
+   	}
+   	jdbc.Update("wechatandqq", "wechatinformation", "update wechatinformation set friendlist='"+(application)+"' where idnumber='"+listperson.get(0).get("idnumber")+"'");
+   	
+   	listmember=jdbc.List("wechatandqq", "wechatinformation","where num='"+Choose+"'");
+   	String[] sssp=wechatgetmember(listmember.get(0).get("friendlist"));
+		for(int j=0;j<sssp.length;j++)
+		{
+			if(sssp[j].equals(listperson.get(0).get("num")))
+			{
+				sssp[j]="0";break;
+			}
+		}
+   	String application2="null";
+   	for(int i=0;i<sssp.length;i++)
+   	{	
+          if(i==0)
+          {
+       	   if(!sssp[i].equals("0"))
+       		   application2=sssp[i];   
+          }
+          else
+          {
+       	   if(!sssp[i].equals("0"))
+       	   application2=application2+"-"+sssp[i];
+          }
+   	}
+   	jdbc.Update("wechatandqq", "wechatinformation", "update wechatinformation set friendlist='"+(application2)+"' where num='"+Choose+"'");
+
+		System.out.println("好友删除成功");
+		wechatsurface();	
+	}
+	public static void wechataddmember() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("--------------添加好友---------------");
+		listperson=jdbc.List("wechatandqq", "wechatinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		listzs=jdbc.List("wechatandqq", "wechatid","where idnumber!='"+listperson.get(0).get("idnumber")+"'");
+		System.out.print("新增好友账号：");
+		Scanner scan=new Scanner(System.in);
+		String newaccountnumber=scan.next();
+		while(newaccountnumber.length()!=10||wechatonly(newaccountnumber)||!wechatfreshmember(newaccountnumber)||newaccountnumber.equals(listperson.get(0).get("idnumber")))
+		{
+			if(newaccountnumber.length()!=10||wechatonly(newaccountnumber))
+			{
+				System.out.println("该账号不存在，请重新输入【0】返回");
+			}
+			else if(!wechatfreshmember(newaccountnumber))
+			{
+				System.out.println("该好友已加入，请重新输入【0】返回");
+			}
+			else if(newaccountnumber.equals(listperson.get(0).get("idnumber")))
+			{
+				System.out.println("本人账号无法加好友，请重新输入【0】返回");
+			}
+			newaccountnumber=scan.next();
+			if(newaccountnumber.equals("0"))
+			{
+				wechatmembermanage();break;
+			}
+		}
+        System.out.println("-新增好友信息-");
+        listzs=jdbc.List("wechatandqq", "wechatinformation","where idnumber='"+newaccountnumber+"'");
+        System.out.println("账号："+newaccountnumber);
+        System.out.println("昵称："+listzs.get(0).get("name"));
+        String wechatapplication=listzs.get(0).get("application");
+        if(listzs.get(0).get("application")==null||listzs.get(0).get("application").equals("null"))
+        {
+        	wechatapplication=listperson.get(0).get("num");
+        }
+        else
+        {
+        	wechatapplication=listzs.get(0).get("application")+"-"+listperson.get(0).get("num");
+        }
+		jdbc.Update("wechatandqq", "wechatinformation", "update wechatinformation set application='"+(wechatapplication)+"' where idnumber='"+newaccountnumber+"'");      
+		System.out.println("好友申请发送中，等待对方接收");
+		wechatsurface();
+	}
+    public static boolean wechatfreshmember(String sss)
+    {
+		listperson=jdbc.List("wechatandqq", "wechatinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		boolean go=true;
+		ArrayList<Map<String,String>> listmember=jdbc.List("wechatandqq", "wechatinformation","where idnumber='"+sss+"'");
+		if(listperson.get(0).get("friendlist")==null||listperson.get(0).get("friendlist").equals("null"))
+		{
+			
+		}
+		else
+		{   ;
+			String[] ss=wechatgetmember(listperson.get(0).get("friendlist"));
+			for(int i=0;i<ss.length;i++)
+			{
+				if(ss[i].equals(listmember.get(0).get("num")))
+				{
+	                go=false;break;
+				}
+			}
+		}
+
+		return go;
+    }  
+	public static void wechatopenmemberlist() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("------------打开好友列表-------------");
+		 listperson=jdbc.List("wechatandqq", "wechatinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		 ArrayList<Map<String,String>> listzh;
+		 String[] ss;
+		ResultSetMetaData rsmdq=null;
+		ArrayList<Map<String,String>> listmember=null;
+		if(listperson.get(0).get("friendlist")==null||listperson.get(0).get("friendlist").equals("null"))
+		{
+			System.out.println("暂无好友");
+		}
+		else
+		{
+			ss=wechatgetmember(listperson.get(0).get("friendlist"));
+			for(int i=0;i<ss.length;i++)
+			
+			{		
+				rsmdq=(ResultSetMetaData) jdbc.getrsmd("wechatandqq", "wechatinformation");						
+				listmember=jdbc.List("wechatandqq", "wechatinformation","where num='"+ss[i]+"'");
+				for(int ii=1;ii<=rsmdq.getColumnCount()-4;ii++)
+				{ 
+					listzh=jdbc.List("wechatandqq", "translate","where english='"+rsmdq.getColumnName(ii)+"'");
+					System.out.print(listzh.get(0).get("chinese")+":"+listmember.get(0).get(rsmdq.getColumnName(ii))+" ");		
+				}
+				System.out.println();				
+			}
+		}
+		wechatsurface();	
+	}
+	public static String[] wechatgetmember(String ss)
+	{
+		String[] s=ss.split("-");
+		return s;
+	}
+	public static void wechatgroupmanage() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("----------------微信群管理-------------");
+		System.out.println("【1】创建群聊\t\t【2】打开群列表");
+		System.out.println("【3】微信查看验证消息");
+		System.out.println("-请选择-");
+		int choose=strongwechat(3);
+		switch(choose)
+		{
+		case 1:wechatbuildgroup();break;
+		case 2:wechatopengrouplist();break;
+		case 3:wechatcheckgroupinformation();break;
+
+		}		
+	}
+	public static void wechatbuildgroup() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("---------------微信创建群聊------------");
+		 listperson=jdbc.List("wechatandqq", "wechatinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		System.out.print("请输入群昵称：");
+		Scanner scan=new Scanner(System.in);
+		String groupname=scan.next();
+		Random random=new Random();
+		String accountnumber="354710"+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10));
+		while(!wechatonly(accountnumber))
+		{
+			accountnumber="354710"+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10))+Integer.toString(random.nextInt(10));
+
+		}
+		jdbc.Update("wechatandqq", "wechatgroup", "insert into wechatgroup(groupid,groupname,groupmember,owner) values('"+accountnumber+"','"+groupname+"','"+listperson.get(0).get("num")+"','"+listperson.get(0).get("num")+"')");		
+       String grouplist=listperson.get(0).get("grouplist");
+       if(listperson.get(0).get("grouplist")==null||listperson.get(0).get("grouplist").equals("null"))
+       {
+       	grouplist=jdbc.List("wechatandqq", "wechatgroup","where groupid='"+accountnumber+"'").get(0).get("num");
+       }
+       else
+       {
+       	grouplist=listperson.get(0).get("grouplist")+"-"+jdbc.List("wechatandqq", "wechatgroup","where groupid='"+accountnumber+"'").get(0).get("num");
+       }
+		jdbc.Update("wechatandqq", "wechatinformation", "update wechatinformation set grouplist='"+(grouplist)+"' where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		System.out.println("创建成功，群账号为："+accountnumber);
+		wechatsurface();	
+	}
+	public static void wechatopengrouplist() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("---------------微信群列表--------------");
+		listperson=jdbc.List("wechatandqq", "wechatinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		if(listperson.get(0).get("grouplist")==null||listperson.get(0).get("grouplist").equals("null"))
+		{
+			System.out.println("尚未加群");
+			wechatsurface();
+		}
+		else
+		{
+			System.out.println("-请选择-");
+			ArrayList<Map<String,String>> listzh;
+			String[] ss;
+			ResultSetMetaData rsmdq=null;
+			ArrayList<Map<String,String>> listgroup=null;
+			ss=wechatgetmember(listperson.get(0).get("grouplist"));
+			for(int i=0;i<ss.length;i++)		
+			{		
+				rsmdq=(ResultSetMetaData) jdbc.getrsmd("wechatandqq", "wechatgroup");						
+				listgroup=jdbc.List("wechatandqq", "wechatgroup","where num='"+ss[i]+"'");
+				for(int ii=1;ii<=3;ii++)
+				{ 
+					listzh=jdbc.List("wechatandqq", "translate","where english='"+rsmdq.getColumnName(ii)+"'");
+					System.out.print(listzh.get(0).get("chinese")+":"+listgroup.get(0).get(rsmdq.getColumnName(ii))+" ");		
+				}
+				System.out.println();				
+			}
+	
+			ArrayList<Map<String,String>> listg=null;
+			String[] sss=wechatgetmember(listperson.get(0).get("grouplist"));
+			int choose=strongwechat(10000);
+			String Choose=String.valueOf(choose);
+			boolean go=false;
+			while(!go)
+			{
+	             for(int i=0;i<sss.length;i++)
+	             {
+	            	 if(Choose.equals(sss[i]))
+	            	 {
+	            		 go=true;break;
+	            		
+	            	 }
+	             }
+	             if(go==false)
+	             {
+	            	 System.out.println("编号输入有误，请重新输入");
+	            	 choose=strongwechat(10000);
+	         		 Choose=String.valueOf(choose);
+	             }
+			}
+			System.out.println("编号输入正确");
+			listg=jdbc.List("wechatandqq", "wechatgroup","where num='"+Choose+"'");
+			System.out.println("【1】查询群成员\t\t【2】退出群");
+			System.out.println("【3】推荐群聊");
+			int choosetwo=strongwechat(3);
+			switch(choosetwo)
+			{
+			case 1:wechatgroupmemberlist(listg);break;
+			case 2:wechatexitgroup(listg);break;
+			case 3:wechatrecommendgroup(listg);break;
+			}
+		}	
+	}
+	public static void wechatexitgroup(ArrayList<Map<String, String>> listg) throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("--------------微信退出群聊-------------");
+		listperson=jdbc.List("wechatandqq", "wechatinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		String[] sss;
+		String[] pp;
+		if(listg.get(0).get("owner").equals(listperson.get(0).get("num")))
+		{
+	    	jdbc.Update("wechatandqq", "wechatgroup", "delete from wechatgroup where groupid ='"+listg.get(0).get("groupid")+"'");
+			pp=wechatgetmember(listg.get(0).get("groupmember"));
+             for(int i=0;i<pp.length;i++)
+             {
+            	 
+            	 listzs=jdbc.List("wechatandqq", "wechatinformation","where num='"+pp[i]+"'");
+         		sss=wechatgetmember(listzs.get(0).get("grouplist"));
+        		for(int j=0;j<sss.length;j++)
+        		{
+        			if(sss[j].equals(listg.get(0).get("num")))
+        			{
+        				sss[j]="0";break;
+        			}
+        		}
+            String application="null";
+        	for(int ii=0;ii<sss.length;ii++)
+        	{
+               if(ii==0)
+               {
+            	   if(!sss[ii].equals("0"))
+            		   application=sss[ii];   
+               }
+               else
+               {
+            	   if(!sss[ii].equals("0"))
+            	   {
+            		   if(application.equals("null"))
+            		   {
+                    	   application=sss[ii];
+            		   }
+            		   else
+            		   {
+                    	   application=application+"-"+sss[ii];
+            		   }
+            	   }
+               }
+        	}
+        	jdbc.Update("wechatandqq", "wechatinformation", "update wechatinformation set grouplist='"+(application)+"' where idnumber='"+listzs.get(0).get("idnumber")+"'");
+            	 
+             }
+	    	System.out.println("由于您是群主，该群已解散");
+		}
+		else
+		{
+			sss=wechatgetmember(listg.get(0).get("groupmember"));
+			for(int j=0;j<sss.length;j++)
+			{
+				if(sss[j].equals(listperson.get(0).get("num")))
+				{
+					sss[j]="0";break;
+				}
+			}
+    	String application="null";
+    	for(int i=0;i<sss.length;i++)
+    	{
+           if(i==0)
+           {
+        	   if(!sss[i].equals("0"))
+        		   application=sss[i];   
+           }
+           else
+           {
+        	   if(!sss[i].equals("0"))
+        	   {
+        		   if(application.equals("null"))
+        		   {
+                	   application=sss[i];
+        		   }
+        		   else
+        		   {
+                	   application=application+"-"+sss[i];
+        		   }
+        	   }
+           }
+    	}
+    	jdbc.Update("wechatandqq", "wechatgroup", "update wechatgroup set groupmember='"+(application)+"' where groupid='"+listg.get(0).get("groupid")+"'");
+		sss=wechatgetmember(listperson.get(0).get("grouplist"));
+		for(int j=0;j<sss.length;j++)
+		{
+			if(sss[j].equals(listg.get(0).get("num")))
+			{
+				sss[j]="0";break;
+			}
+		}
+     application="null";
+	for(int i=0;i<sss.length;i++)
+	{
+       if(i==0)
+       {
+    	   if(!sss[i].equals("0"))
+    		   application=sss[i];   
+       }
+       else
+       {
+    	   if(!sss[i].equals("0"))
+    	   {
+    		   if(application.equals("null"))
+    		   {
+            	   application=sss[i];
+    		   }
+    		   else
+    		   {
+            	   application=application+"-"+sss[i];
+    		   }
+    	   }
+       }
+	}
+	jdbc.Update("wechatandqq", "wechatinformation", "update wechatinformation set grouplist='"+(application)+"' where idnumber='"+listperson.get(0).get("idnumber")+"'");
+    System.out.println("您已退出群聊");
+		}
+		wechatsurface();	
+	}
+	public static void wechatgroupmemberlist(ArrayList<Map<String, String>> listg) throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("-------------微信查看群成员------------");
+		listperson=jdbc.List("wechatandqq", "wechatinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		String ownername=jdbc.List("wechatandqq", "wechatinformation","where num='"+listg.get(0).get("owner")+"'").get(0).get("name");
+		String ownernumber=jdbc.List("wechatandqq", "wechatinformation","where num='"+listg.get(0).get("owner")+"'").get(0).get("idnumber");
+		System.out.println("-群主-");
+		System.out.print("账号："+ownernumber+" ");
+		System.out.println("昵称："+ownername);
+	    ArrayList<Map<String,String>> listzh;
+		String[] ss;
+		ResultSetMetaData rsmdq=null;
+		ArrayList<Map<String,String>> listmember=null;
+		ss=wechatgetmember(listg.get(0).get("groupmember"));
+        System.out.println("-群成员-");
+		for(int i=0;i<ss.length;i++)		
+			{		
+				rsmdq=(ResultSetMetaData) jdbc.getrsmd("wechatandqq", "wechatinformation");						
+				listmember=jdbc.List("wechatandqq", "wechatinformation","where num='"+ss[i]+"'");
+				for(int ii=1;ii<=rsmdq.getColumnCount()-4;ii++)
+				{ 
+					listzh=jdbc.List("wechatandqq", "translate","where english='"+rsmdq.getColumnName(ii)+"'");
+					System.out.print(listzh.get(0).get("chinese")+":"+listmember.get(0).get(rsmdq.getColumnName(ii))+" ");		
+				}
+				System.out.println();				
+			}
+		wechatsurface();	
+	}
+	public static void wechatrecommendgroup(ArrayList<Map<String, String>> listg) throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("------------打开好友列表-------------");
+		 listperson=jdbc.List("wechatandqq", "wechatinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		 ArrayList<Map<String,String>> listzh;
+		 String[] ss;
+		 String[] sss;
+		 String[] useful=new String[50];
+		 int number=0;
+		 int push=0;
+		ResultSetMetaData rsmdq=null;
+		ArrayList<Map<String,String>> listmember=null;
+		if(listperson.get(0).get("friendlist")==null||listperson.get(0).get("friendlist").equals("null"))
+		{
+			System.out.println("暂无好友可推荐");
+		}
+		else
+		{
+			ss=wechatgetmember(listperson.get(0).get("friendlist"));
+			for(int i=0;i<ss.length;i++)
+			
+			{
+				
+				sss=wechatgetmember(listg.get(0).get("groupmember"));
+		        int get=0;
+				for(int ip=0;ip<sss.length;ip++)		
+					{		
+			            if(sss[ip].equals(ss[i]))
+			             {
+			                	 get=1;break;
+			              }
+					}
+				if(get==0)
+				{
+					rsmdq=(ResultSetMetaData) jdbc.getrsmd("wechatandqq", "wechatinformation");						
+					listmember=jdbc.List("wechatandqq", "wechatinformation","where num='"+ss[i]+"'");
+					for(int ii=1;ii<=rsmdq.getColumnCount()-4;ii++)
+					{ 
+						listzh=jdbc.List("wechatandqq", "translate","where english='"+rsmdq.getColumnName(ii)+"'");
+						System.out.print(listzh.get(0).get("chinese")+":"+listmember.get(0).get(rsmdq.getColumnName(ii))+" ");		
+					}
+					useful[number]=listmember.get(0).get("num");
+					number++;
+					System.out.println();	
+					push=1;
+				}
+				get=0;
+			}
+			if(push==0)
+			{
+				System.out.println("暂无好友可推荐");
+			}
+			else
+			{
+				System.out.println("-请选择编号");
+				Scanner scan=new Scanner(System.in);
+				String num=scan.next();
+				int get=0;
+				boolean go=true;
+				while(go)
+				{
+					for(int i=0;i<number;i++)
+					{
+						if(num.equals(useful[i]))
+						{
+							get=1;go=false;break;
+						}
+					}
+					if(get==1)
+					{
+						listzs=jdbc.List("wechatandqq", "wechatinformation","where num='"+num+"'");
+						String wechatapplication;
+				        if(listzs.get(0).get("groupapplication")==null||listzs.get(0).get("groupapplication").equals("null"))
+				        {
+				        	wechatapplication=listg.get(0).get("num");
+				        }
+				        else
+				        {
+				        	wechatapplication=listzs.get(0).get("groupapplication")+"-"+listg.get(0).get("num");
+				        }
+						jdbc.Update("wechatandqq", "wechatinformation", "update wechatinformation set groupapplication='"+(wechatapplication)+"' where num='"+listzs.get(0).get("num")+"'");      
+						System.out.println("推荐群聊发送中，等待对方接收");
+						
+					}					
+					else
+					{				
+						System.out.println("编号输入错误，请重新输入【*】返回");
+						num=scan.next();
+	                    if(num.equals("*"))
+	                    {
+	                    	wechatsurface();
+	                    }
+					}
+				}
+			}
+		}
+		wechatsurface();
+	}
+	public static void wechatcheckgroupinformation() throws SQLException {
+		// TODO Auto-generated method stub
+		System.out.println("--------------微博查看验证消息-------------");
+		 listperson=jdbc.List("wechatandqq", "wechatinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		if(listperson.get(0).get("groupapplication")==null||listperson.get(0).get("groupapplication").equals("null"))
+		{
+			System.out.println("暂无消息");
+		}
+		else
+		{
+      System.out.println("-推荐群聊信息-");
+   	ArrayList<Map<String,String>> listgroup=null;
+		String[] sss=wechatgetmember(listperson.get(0).get("groupapplication"));
+			for(int i=0;i<sss.length;i++)
+			{		
+				listgroup=jdbc.List("wechatandqq", "wechatgroup","where num='"+sss[i]+"'");
+              System.out.println("编号："+listgroup.get(0).get("num"));
+              System.out.println("账号："+listgroup.get(0).get("groupid"));
+              System.out.println("昵称："+listgroup.get(0).get("groupname"));
+				System.out.println("是加入该群聊【1】同意，【2】拒绝");
+				int choose=strongwechat(2);
+				if(choose==1)
+				{
+					//处理自己这边的数据库
+					String newgrouplist;
+			    	if(listperson.get(0).get("grouplist")==null||listperson.get(0).get("grouplist").equals("null"))
+			    	{
+			    		newgrouplist=listgroup.get(0).get("num");
+			    	}
+			    	else			 		    		
+					newgrouplist=listperson.get(0).get("grouplist")+"-"+listgroup.get(0).get("num");			    
+			    	jdbc.Update("wechatandqq", "wechatinformation", "update wechatinformation set grouplist='"+(newgrouplist)+"' where idnumber='"+listperson.get(0).get("idnumber")+"'");
+					
+			    	String newgrouplist2=listgroup.get(0).get("groupmember");
+			    	if(listgroup.get(0).get("groupmember")==null||listgroup.get(0).get("groupmember").equals("null"))
+			    	{
+			    		newgrouplist2=sss[i];
+			    	}
+			    	else
+			    		newgrouplist2=listgroup.get(0).get("groupmember")+"-"+listperson.get(0).get("num");
+			    	jdbc.Update("wechatandqq", "wechatgroup", "update wechatgroup set groupmember='"+(newgrouplist2)+"' where groupid='"+listgroup.get(0).get("groupid")+"'");                      
+					for(int j=0;j<sss.length;j++)
+					{
+						if(sss[j].equals(sss[i]))
+						{
+							sss[i]="0";break;
+						}
+					}
+					wechatrefreshgroupapplication(sss);
+				}
+				else if(choose==2)
+				{
+					for(int j=0;j<sss.length;j++)
+					{
+						if(sss[j].equals(sss[i]))
+						{
+							sss[i]="0";break;
+						}
+					}
+					wechatrefreshgroupapplication(sss);
+				}
+			}
+		}
+
+		wechatsurface();	
+	}
+	public static int strongwechat(int n) throws SQLException////控制用户选择功能的输入格式
+	{
+		boolean go=false;
+		int num=0;
+		Scanner scan=new Scanner(System.in);
+		String ss=scan.next();
+		while(!go)
+		{
+			while(!number(ss))//使在用户输入错误之后给用户提示信息
+			{
+				System.out.println("输入有误，请重新输入");
+				ss=scan.next();
+			}	
+			 num=Integer.valueOf(ss);
+			 if(num==0)
+			 {
+				 wechatsurface();break;
+			 }
+			 for(int i=1;i<=n;i++)
+			{
+				if(num==i)
+				{
+					go=true;break;
+				}
+			}
+			 if(go==false)
+			 {
+					System.out.println("输入有误，请重新输入");
+					ss=scan.next();
+			 }
+		}
+		return num;
+		
+	}
+	public static boolean wechatonly(String sss)
+	{
+		ArrayList<Map<String,String>> listp=jdbc.List("wechatandqq", "wechatid");
+		listzs=jdbc.List("wechatandqq", "wechatinformation");
+		boolean go=true;
+		if(listzs.size()==0)
+		{
+			return go;
+		}
+	
+		for(int i=0;i<listp.size();i++)
+		{
+			if(sss.equals(listp.get(i).get("idnumber")))
+			{
+                go=false;break;
+			}
+		}
+		return go;
+	}
+	public static boolean wechatonlygroup(String sss)
+	{
+		ArrayList<Map<String,String>> listp=jdbc.List("wechatandqq", "wechatgroup");
+		listperson=jdbc.List("wechatandqq", "wechatinformation","where idnumber='"+listperson.get(0).get("idnumber")+"'");
+		boolean go=true;
+		for(int i=0;i<listp.size();i++)
+		{
+			if(sss.equals(listp.get(i).get("groupid")))
+			{
+                go=false;break;
+			}
+		}
+		return go;
+	}
+}
